@@ -32,8 +32,8 @@ export const SIDEBAR_MENU: SidebarMenuItem[] = [
   { label: 'Mail', icon: 'lucideInbox', route: '/mail/inbox' },
   { label: 'Calendar', icon: 'lucideCalendar', route: '/calendar' },
   { label: 'Activity log', icon: 'lucideFileClock', route: '/activity-log' },
-  { label: 'Timeline', icon: 'lucideHistory', route: '/timeline', roles: ['admin'] },
-  { label: 'Chat', icon: 'lucideMessageSquareText', route: '/chat', roles: ['admin'] },
+  { label: 'Timeline', icon: 'lucideHistory', route: '/timeline' },
+  { label: 'Chat', icon: 'lucideMessageSquareText', route: '/chat' },
   {
     label: 'File Manager',
     icon: 'lucideFolder',

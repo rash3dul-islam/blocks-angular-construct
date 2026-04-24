@@ -3,6 +3,6 @@ export const environment = {
   production: false,
   blocksApiUrl: 'https://dev-api.seliseblocks.com',
   apiBaseUrl: 'https://dev-api.seliseblocks.com',
-  xBlocksKey: 'D6241ddafbef647b8bfa303785298e5b3',
+  xBlocksKey: 'cf18dc87904c4e1485639242cda4a026',
   projectSlug: 'dbmvyb',
 };

@@ -49,12 +49,8 @@ export const menuItems: MenuItem[] = [
   createMenuItem('mail', 'MAIL', '/mail/inbox', 'Inbox'),
   createMenuItem('calendar', 'CALENDAR', '/calendar', 'Calendar'),
   createMenuItem('activity-log', 'ACTIVITY_LOG', '/activity-log', 'FileClock', {}),
-  createMenuItem('timeline', 'TIMELINE', '/timeline', 'History', {
-    roles: ['admin'],
-  }),
-  createMenuItem('chat', 'CHAT', '/chat', 'MessageSquareText', {
-    roles: ['admin'],
-  }),
+  createMenuItem('timeline', 'TIMELINE', '/timeline', 'History'),
+  createMenuItem('chat', 'CHAT', '/chat', 'MessageSquareText'),
   createMenuItemWithChildren('file-manager', 'FILE_MANAGER', '/file-manager', 'Folder', [
     createMenuItem('my-files', 'MY_FILES', '/file-manager/my-files'),
     createMenuItem('shared-files', 'SHARED_WITH_ME', '/file-manager/shared-files'),

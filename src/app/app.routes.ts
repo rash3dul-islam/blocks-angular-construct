@@ -5,7 +5,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './state/store/auth/auth.guard';
 import { publicGuard } from './state/store/auth/public.guard';
-import { roleGuard } from './state/store/auth/role.guard';
 
 export const routes: Routes = [
   // ── Redirect root (full app URL) → dashboard (requires auth, handled by next route) ──
@@ -68,8 +67,6 @@ export const routes: Routes = [
       },
       {
         path: 'timeline',
-        canActivate: [roleGuard],
-        data: { roles: ['admin'] },
         loadComponent: () =>
           import('./modules/activity-log/pages/timeline/timeline.component').then(
             m => m.TimelineComponent,

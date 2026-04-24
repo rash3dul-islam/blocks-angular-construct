@@ -62,28 +62,14 @@ export const AppRoutes = () => {
                 <Route path="/inventory/add" element={<InventoryFormPage />} />
                 <Route path="/inventory/:itemId" element={<InventoryDetailsPage />} />
                 <Route path="/activity-log" element={<ActivityLogPage />} />
-                <Route
-                  path="/timeline"
-                  element={
-                    <ProtectedRoute roles={['admin']}>
-                      <TimelinePage />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/timeline" element={<TimelinePage />} />
                 <Route path="/mail" element={<EmailPage />} />
                 <Route path="/mail/:category" element={<EmailPage />} />
                 <Route path="/mail/:category/:emailId" element={<EmailPage />} />
                 <Route path="/mail/:category/:labels/:emailId" element={<EmailPage />} />
                 <Route path="/identity-management" element={<UsersTablePage />} />
                 <Route path="/task-manager" element={<TaskManagerPage />} />
-                <Route
-                  path="/chat"
-                  element={
-                    <ProtectedRoute roles={['admin']}>
-                      <ChatPage />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/chat" element={<ChatPage />} />
                 <Route path="/invoices" element={<InvoicesPage />} />
                 <Route path="/invoices/create-invoice" element={<CreateInvoicePage />} />
                 <Route path="/invoices/:invoiceId/edit" element={<EditInvoicePage />} />

@@ -6,7 +6,7 @@ export const FINANCE_ROUTES: Routes = [
   {
     path: '',
     canActivate: [roleGuard],
-    data: { roles: ['admin'] },
+    // data: { roles: ['admin'] },
     loadComponent: () =>
       import('./pages/finance/finance.component').then(m => m.FinanceComponent),
   },
