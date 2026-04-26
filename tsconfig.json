@@ -1,63 +1,38 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "./dist/out-tsc",
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
+
+    /* Module resolution */
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "allowJs": true,
     "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "moduleResolution": "bundler",
-    "importHelpers": true,
-    "target": "ES2022",
-    "module": "ES2022",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Path mapping */
+    "baseUrl": ".",
     "paths": {
-      "@spartan-ng/helm/button": ["./src/app/components/ui-kit/button/src/index.ts"],
-      "@spartan-ng/helm/utils": ["./src/app/components/ui-kit/utils/src/index.ts"],
-      "@spartan-ng/helm/input": ["./src/app/components/ui-kit/input/src/index.ts"],
-      "@spartan-ng/helm/label": ["./src/app/components/ui-kit/label/src/index.ts"],
-      "@spartan-ng/helm/badge": ["./src/app/components/ui-kit/badge/src/index.ts"],
-      "@spartan-ng/helm/card": ["./src/app/components/ui-kit/card/src/index.ts"],
-      "@spartan-ng/helm/separator": ["./src/app/components/ui-kit/separator/src/index.ts"],
-      "@spartan-ng/helm/tabs": ["./src/app/components/ui-kit/tabs/src/index.ts"],
-      "@spartan-ng/helm/icon": ["./src/app/components/ui-kit/icon/src/index.ts"],
-      "@spartan-ng/helm/dialog": ["./src/app/components/ui-kit/dialog/src/index.ts"],
-      "@spartan-ng/helm/sheet": ["./src/app/components/ui-kit/sheet/src/index.ts"],
-      "@spartan-ng/helm/accordion": ["./src/app/components/ui-kit/accordion/src/index.ts"],
-      "@spartan-ng/helm/checkbox": ["./src/app/components/ui-kit/checkbox/src/index.ts"],
-      "@spartan-ng/helm/select": ["./src/app/components/ui-kit/select/src/index.ts"],
-      "@spartan-ng/helm/textarea": ["./src/app/components/ui-kit/textarea/src/index.ts"],
-      "@spartan-ng/helm/switch": ["./src/app/components/ui-kit/switch/src/index.ts"],
-      "@spartan-ng/helm/tooltip": ["./src/app/components/ui-kit/tooltip/src/index.ts"],
-      "@spartan-ng/helm/popover": ["./src/app/components/ui-kit/popover/src/index.ts"],
-      "@spartan-ng/helm/avatar": ["./src/app/components/ui-kit/avatar/src/index.ts"],
-      "@spartan-ng/helm/skeleton": ["./src/app/components/ui-kit/skeleton/src/index.ts"],
-      "@spartan-ng/helm/table": ["./src/app/components/ui-kit/table/src/index.ts"],
-      "@spartan-ng/helm/command": ["./src/app/components/ui-kit/command/src/index.ts"],
-      "@spartan-ng/helm/dropdown-menu": ["./src/app/components/ui-kit/dropdown-menu/src/index.ts"],
-      "@spartan-ng/helm/radio-group": ["./src/app/components/ui-kit/radio-group/src/index.ts"],
-      "@spartan-ng/helm/collapsible": ["./src/app/components/ui-kit/collapsible/src/index.ts"],
-      "@app/*": ["./src/app/*"],
-      "@components/*": ["./src/app/components/*"],
-      "@modules/*": ["./src/app/modules/*"],
-      "@layout/*": ["./src/app/layout/*"],
-      "@state/*": ["./src/app/state/*"],
-      "@lib/*": ["./src/app/lib/*"],
-      "@services/*": ["./src/app/services/*"],
-      "@models/*": ["./src/app/models/*"],
-      "@types/*": ["./src/app/types/*"],
-      "@constant/*": ["./src/app/constant/*"],
-      "@environments/*": ["./src/environments/*"]
-    }
+      "@/*": ["src/*"]
+    },
+
+    /* Testing */
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
-  "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
-  }
+  "include": ["src"],
+  "exclude": ["node_modules", "vite.config.ts"]
 }

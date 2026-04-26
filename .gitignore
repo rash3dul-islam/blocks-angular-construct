@@ -9,11 +9,7 @@
 
 # Production
 /build
-build/
 /dist
-
-# Angular CLI (cache, Vite prebundles, etc.)
-.angular/
 
 # Misc
 .DS_Store
@@ -24,12 +20,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files (set VITE_* / X_* in CI, shell, or a local .env)
-.env
-.env.*
-!.env.example
-# Generated from environment variables; keep secrets out of git
-/src/environments/environment.config.ts
+# Local env files
+.env.local
 
 # IDE - VSCode
 .cursor/*

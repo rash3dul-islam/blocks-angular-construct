@@ -5,15 +5,15 @@ module.exports = {
       2,
       'always',
       [
-        'feat',
-        'fix',
-        'docs',
-        'style',
-        'refactor',
-        'test',
-        'chore',
-        'perf',
-        'revert',
+        'feat', // New feature
+        'fix', // Bug fix
+        'docs', // Documentation
+        'style', // Formatting, missing semicolons, etc.
+        'refactor', // Refactoring
+        'test', // Adding tests
+        'chore', // Maintenance tasks
+        'perf', // Performance improvements
+        'revert', // Revert changes
       ],
     ],
     'subject-case': [2, 'never', ['upper-case']],

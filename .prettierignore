@@ -1,6 +1,16 @@
+# Dependencies
 node_modules
-dist
-out-tsc
-coverage
 package-lock.json
-react_Constract
+yarn.lock
+
+# Build outputs
+build
+dist
+coverage
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

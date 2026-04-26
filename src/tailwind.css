@@ -1,6 +1,0 @@
-/* PostCSS/Tailwind entry (plain CSS — avoids Sass @import deprecation on `tailwindcss`). */
-/* Scan `src/` (relative to this file) so utilities from `*.ts` templates are always detected. */
-@import 'tailwindcss' source('.');
-@config '../tailwind.config.js';
-
-@source '../node_modules/@spartan-ng';

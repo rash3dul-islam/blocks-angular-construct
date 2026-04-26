@@ -14,4 +14,4 @@
 # chore: Other changes that don't modify src or test files
 # revert: Reverts a previous commit
 
-#npx --no -- commitlint --edit ${1}
+# npx --no -- commitlint --edit ${1}
