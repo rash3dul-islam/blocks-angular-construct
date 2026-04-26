@@ -77,7 +77,6 @@ jobs:
           output_location: "dist/test_crud_project_angular/browser"
           app_build_command: "npm run build:prod"
 
-
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
