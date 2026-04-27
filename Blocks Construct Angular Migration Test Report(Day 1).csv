@@ -1,0 +1,49 @@
+Id,Feature,Bug Title/Descriptions,Step to reproduce,React UI Image,Angular UI Image,Status,Reported Date,Assigned To,Fixed Date,Remarks
+1,Login,Login Ui is scrollable. not fit in the window. UI breaks,1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login,https://prnt.sc/EJVLGD3W0rH7,https://prnt.sc/q57sOugyItBx,Open,27th April 2026,,,
+2,Login,Gap Between input field name and input area not matched,1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login,React UI,Angular UI,Open,27th April 2026,,,
+3,Login,Text font and font size not matched with react app,1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login,React UI,Angular UI,Open,27th April 2026,,,
+4,Forgot Password,Forgot Password UI not matched with react UI. ,"1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login
+2. Click on Forgot Password",React UI,Angular UI,Open,27th April 2026,,,
+5,Forgot Password,abc@email considered as valid email in angular app. System enabled send reset link,"1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login
+2. Click on Forgot Password
+3. input abc@email",,https://prnt.sc/EAIBPvA57vRi,Open,27th April 2026,,,
+6,Forgot Password,Error message should show in user understandable format,"1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login
+2. Click on Forgot Password
+3. input abc@email
+4. Click on send reset link",,https://prnt.sc/TBUkI1OlcGI1,Open,27th April 2026,,,
+7,Forgot Password,Forgot password Ui is scrollable. not fit in the window. UI breaks,"""1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login
+2. Click on Forgot Password
+",,https://prnt.sc/OxNTcNTbdhmy,Open,27th April 2026,,,
+8,Login,Invalid credentials message not matched with react app. and toast message not showing,"""1. Visit https://lively-river-0ae10e500.7.azurestaticapps.net/login
+2. Input inavail email and password
+3. click on login",React UI,Angular UI,Open,27th April 2026,,,
+9,IAM,IAM UI Issues,,,https://prnt.sc/Tfrm7qo333WK,Open,27th April 2026,,,
+10,IAM,Can't Change search by name to Search by Email,,,https://prnt.sc/eDgCX1CGqiv3,Open,27th April 2026,,,
+11,IAM,Feilds sorting feature and translation for table header are missing,,,https://prnt.sc/DXKL7RP4dkR3,Open,27th April 2026,,,
+12,IAM,Actions option hided/breaks UI ,,,https://prnt.sc/iXo-i9CgX0kL,Open,27th April 2026,,,
+13,IAM,Add new User,,,https://prnt.sc/ztrz85xHPgvT,,,,,
+14,IAM,Add New User modal remembers last input while user cancel or cross the modal,"1. Open add new user modal
+2. Input fields data
+3. Close the modal or cancel
+4. Again open the modal",,,Open,,,,
+15,Language Selector,No option showing in Language selector section,,,Angualr Ui,Open,,,,
+16,Notification modal,"Notification layout not matched with react app. 
+All and Unread options missing ",,React UI,Angular UI,Open,,,,
+17,Nav Bar,"Notification, Organization, and Account dropdowns open at the same time",,,https://prnt.sc/jPMNMyRJCUL4,Open,,,,
+18,Dashboard,"Design layout not matched with React App. DashBoard should show 4 section. Overview, Users by platform, User activity treands and System usage overview.",,React UI,Angular UI,Open,,,,
+19,Dashboard,Export and sysnc button missing in Dashboard,,React UI,Angular UI,Open,,,,
+20,IAM,IAM UI design not matched with react app. In angular UI design is in default template,,https://prnt.sc/X4Oxwi0fx6FP,https://prnt.sc/4LyW16P3Fum5,Open,,,,
+21,IAM,View details sections not matched with react app,,https://prnt.sc/f3v3C5CAX_Sx,https://prnt.sc/X4QlTYRuylXo,,,,,
+22,IAM,"In react app there is only one action that is View Details, but in Angular app there are many options",,https://prnt.sc/99Rj4VPm1Gds,https://prnt.sc/qlYVRSsB99ao,Open,,,,
+23,Mail,Angular default template used,,,https://prnt.sc/PFR-DNeL3gAq,Open,,,,
+24,Mail,"Number of unread email number missing beside inbox, starred, draft, spam, trash
+Checkbox for a email is missing, 
+All and Unread filter missing ,
+Select all is missing, 
+Delete, read/unread, and spam buttons are missing 
+Search email design not matched with react app",,https://prnt.sc/tp3Ur2qMQVw5,https://prnt.sc/1FJiR8Seiev-,Open,,,,
+25,Mail,Compose Email section not matched with react app,,https://prnt.sc/t_NpM1r-35BK,https://prnt.sc/T-tU3gJMimRd,Open,,,,
+26,Mail,Opened Mail layout not matched with react app,,https://prnt.sc/_geqdCjIj4Bb,https://prnt.sc/8aWLLHZ7voVg,Open,,,,
+27,Calendar,Layout not matched with react app. and design is using default template,,https://prnt.sc/EqcObcyfK0_A,https://prnt.sc/l-35AQ3dEuIa,Open,,,,
+28,Calendar,Add event modal used default template and not matched with react app. ,,https://prnt.sc/pt6aWhHoayC5,https://prnt.sc/6mTfmCaI9uu6,,,,,
+29,Calendar,"Search, filter settings missing ",,https://prnt.sc/EqcObcyfK0_A,https://prnt.sc/l-35AQ3dEuIa,,,,,

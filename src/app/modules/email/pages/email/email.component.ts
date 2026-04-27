@@ -34,11 +34,15 @@ import {
   lucideCheck,
   lucideLoader,
   lucidePaperclip,
+  lucideMail,
+  lucideMailOpen,
 } from '@ng-icons/lucide';
 import { EmailService } from '../../services/email.service';
 import { Email, EmailCategory, EmailLabel } from '../../../../models/email.model';
 
-type EmailTab = { key: EmailCategory; label: string; icon: string };
+type MailFolder = EmailCategory | 'starred';
+type EmailTab = { key: MailFolder; label: string; icon: string };
+type ListFilterMode = 'all' | 'unread';
 
 @Component({
   selector: 'app-email',
@@ -66,10 +70,30 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
       lucideCheck,
       lucideLoader,
       lucidePaperclip,
+      lucideMail,
+      lucideMailOpen,
     }),
   ],
   template: `
-    <div class="flex h-full -m-6 bg-background">
+    <div class="-m-6 flex h-full flex-col bg-background">
+      <!-- Top header (React-like) -->
+      <div class="flex items-center justify-between border-b border-border bg-background px-4 py-3">
+        <h2 class="text-2xl font-bold tracking-tight text-foreground">Mail</h2>
+        <div class="relative w-[280px] md:w-[320px]">
+          <ng-icon
+            name="lucideSearch"
+            class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            [(ngModel)]="globalSearch"
+            (ngModelChange)="onGlobalSearchChanged()"
+            placeholder="Search by name and subject"
+            class="h-9 w-full rounded-md border border-input bg-muted/30 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-1 overflow-hidden">
       <!-- ── Left: Category sidebar ─────────────────────────────────────── -->
       <aside class="w-52 border-r border-border flex flex-col shrink-0">
         <!-- Compose button -->
@@ -88,16 +112,23 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
         <nav class="flex-1 px-2 pb-2 space-y-0.5">
           <button
             *ngFor="let tab of tabs"
-            (click)="selectCategory(tab.key)"
+            (click)="selectFolder(tab.key)"
             class="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors"
             [ngClass]="
-              activeCategory() === tab.key
+              activeFolder() === tab.key
                 ? 'bg-accent text-accent-foreground font-medium'
                 : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
             "
           >
             <ng-icon [name]="tab.icon" class="w-4 h-4" />
-            {{ tab.label }}
+            <span class="flex-1 text-left">{{ tab.label }}</span>
+            @if (tab.key !== 'starred' && unreadCount(tab.key) > 0) {
+              <span
+                class="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground"
+              >
+                {{ unreadCount(tab.key) }}
+              </span>
+            }
           </button>
 
           <!-- Labels -->
@@ -119,31 +150,97 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
 
       <!-- ── Middle: Email list ──────────────────────────────────────────── -->
       <div class="w-80 border-r border-border flex flex-col shrink-0">
-        <!-- Search -->
-        <div class="p-3 border-b border-border">
-          <div class="relative">
-            <ng-icon
-              name="lucideSearch"
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
-            />
+        <!-- Header: folder title + filters + bulk toolbar -->
+        <div class="border-b border-border">
+          <div class="flex items-center justify-between px-4 py-2">
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-border"
+                  [checked]="isAllSelected()"
+                  (change)="toggleSelectAll()"
+                />
+                Select all
+              </label>
+              <div class="flex items-center overflow-hidden rounded-md border border-border bg-background">
+                <button
+                  type="button"
+                  class="px-3 py-1 text-xs font-semibold"
+                  [ngClass]="filterMode() === 'all' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'"
+                  (click)="filterMode.set('all')"
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  class="px-3 py-1 text-xs font-semibold"
+                  [ngClass]="filterMode() === 'unread' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'"
+                  (click)="filterMode.set('unread')"
+                >
+                  Unread
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                (click)="refresh()"
+                class="p-1 rounded text-muted-foreground hover:text-foreground"
+                aria-label="Refresh"
+              >
+                <ng-icon name="lucideRefreshCw" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Keep local list search, but make it minimal (React uses top search). -->
+          <div class="px-3 pb-3">
             <input
               [(ngModel)]="searchQuery"
               placeholder="Search emails..."
-              class="w-full h-8 pl-8 pr-3 rounded-md border border-input bg-muted/50 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-ring"
+              class="h-8 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
             />
           </div>
-        </div>
 
-        <!-- Category header -->
-        <div class="flex items-center justify-between px-4 py-2 border-b border-border">
-          <h2 class="text-sm font-semibold text-foreground capitalize">{{ activeCategory() }}</h2>
-          <button
-            (click)="refresh()"
-            class="p-1 rounded text-muted-foreground hover:text-foreground"
-          >
-            <ng-icon name="lucideRefreshCw" class="w-4 h-4" />
-          </button>
+          @if (checkedEmailIds().length > 0) {
+            <div class="flex items-center gap-2 px-3 pb-3">
+              <span class="text-xs font-semibold text-foreground">
+                {{ checkedEmailIds().length }} selected
+              </span>
+              <button
+                type="button"
+                class="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
+                (click)="bulkMarkRead(true)"
+              >
+                <ng-icon name="lucideMailOpen" class="h-4 w-4" />
+                Mark read
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
+                (click)="bulkMarkRead(false)"
+              >
+                <ng-icon name="lucideMail" class="h-4 w-4" />
+                Mark unread
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
+                (click)="bulkMoveToSpam()"
+              >
+                <ng-icon name="lucideAlertTriangle" class="h-4 w-4" />
+                Spam
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
+                (click)="bulkMoveToTrash()"
+              >
+                <ng-icon name="lucideTrash2" class="h-4 w-4" />
+                Delete
+              </button>
+            </div>
+          }
         </div>
 
         <!-- Email list -->
@@ -171,12 +268,22 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
           >
             <!-- Sender + date -->
             <div class="flex items-center justify-between mb-1">
-              <span
-                class="text-sm truncate"
-                [ngClass]="!email.isRead ? 'text-foreground font-semibold' : 'text-foreground'"
-              >
-                {{ email.from.name || email.from.email }}
-              </span>
+              <div class="flex items-center gap-2 min-w-0">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-border"
+                  [checked]="isChecked(email.emailId)"
+                  (click)="$event.stopPropagation()"
+                  (change)="toggleChecked(email.emailId)"
+                  aria-label="Select email"
+                />
+                <span
+                  class="text-sm truncate"
+                  [ngClass]="!email.isRead ? 'text-foreground font-semibold' : 'text-foreground'"
+                >
+                  {{ email.from.name || email.from.email }}
+                </span>
+              </div>
               <span class="text-xs text-muted-foreground shrink-0 ml-2">
                 {{ email.createdAt | date: 'MMM d' }}
               </span>
@@ -220,6 +327,13 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
           >
           <div class="flex gap-1">
             <button
+              type="button"
+              class="mr-2 rounded px-2 py-1 text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
+              (click)="toggleSelectAll()"
+            >
+              {{ isAllSelected() ? 'Clear' : 'Select all' }}
+            </button>
+            <button
               class="p-1 rounded hover:bg-accent text-muted-foreground disabled:opacity-40"
               [disabled]="page() <= 1"
               (click)="prevPage()"
@@ -233,75 +347,9 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
         </div>
       </div>
 
-      <!-- ── Right: Email detail / Compose ──────────────────────────────── -->
+      <!-- ── Right: Email detail ─────────────────────────────────────────── -->
       <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Compose view -->
-        <ng-container *ngIf="composeOpen(); else emailDetail">
-          <div class="flex items-center justify-between px-6 py-4 border-b border-border">
-            <h3 class="font-semibold text-foreground">New Message</h3>
-            <button
-              (click)="composeOpen.set(false)"
-              class="p-1.5 rounded-md hover:bg-accent text-muted-foreground"
-            >
-              <ng-icon name="lucideX" class="w-4 h-4" />
-            </button>
-          </div>
-
-          <div class="flex-1 flex flex-col p-6 gap-3">
-            <div class="flex items-center gap-3 border-b border-border pb-3">
-              <span class="text-sm text-muted-foreground w-8">To</span>
-              <input
-                [(ngModel)]="composeTo"
-                type="email"
-                placeholder="recipient@example.com"
-                class="flex-1 text-sm bg-transparent focus:outline-none text-foreground"
-              />
-            </div>
-            <div class="flex items-center gap-3 border-b border-border pb-3">
-              <span class="text-sm text-muted-foreground w-8">Subject</span>
-              <input
-                [(ngModel)]="composeSubject"
-                type="text"
-                placeholder="Email subject"
-                class="flex-1 text-sm bg-transparent focus:outline-none text-foreground"
-              />
-            </div>
-            <textarea
-              [(ngModel)]="composeBody"
-              placeholder="Write your message here..."
-              class="flex-1 resize-none bg-transparent text-sm text-foreground focus:outline-none"
-            ></textarea>
-
-            <!-- Compose actions -->
-            <div class="flex items-center gap-2 pt-3 border-t border-border">
-              <button
-                (click)="sendEmail()"
-                class="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm
-                       hover:bg-primary/90 transition-colors"
-              >
-                <ng-icon name="lucideSend" class="w-4 h-4" />
-                Send
-              </button>
-              <button
-                (click)="saveDraft()"
-                class="flex items-center gap-2 px-4 py-2 border border-border rounded-md text-sm
-                       text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <ng-icon name="lucideFileEdit" class="w-4 h-4" />
-                Save Draft
-              </button>
-              <button
-                (click)="composeOpen.set(false)"
-                class="ml-auto p-2 rounded-md hover:bg-accent text-muted-foreground"
-              >
-                <ng-icon name="lucideTrash2" class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- Email detail view -->
-        <ng-template #emailDetail>
+        <ng-template [ngIf]="true">
           <!-- Empty state -->
           <div
             *ngIf="!selectedEmail()"
@@ -314,14 +362,25 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
           <!-- Email content -->
           <ng-container *ngIf="selectedEmail() as email">
             <!-- Email header/actions -->
-            <div class="flex items-center gap-2 px-6 py-3 border-b border-border">
+            <div class="flex items-center justify-between gap-3 px-6 py-3 border-b border-border">
+              <div class="flex items-center gap-2 min-w-0">
+                <h3 class="truncate text-base font-semibold text-foreground">{{ email.subject }}</h3>
+                @if (email.labels?.length) {
+                  <span
+                    class="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                  >
+                    {{ email.labels?.[0]?.name }}
+                    <span class="text-muted-foreground">×</span>
+                  </span>
+                }
+              </div>
               <button
                 (click)="selectedEmail.set(null)"
                 class="p-1.5 rounded-md hover:bg-accent text-muted-foreground md:hidden"
               >
                 <ng-icon name="lucideChevronLeft" class="w-4 h-4" />
               </button>
-              <div class="flex items-center gap-2 ml-auto">
+              <div class="flex items-center gap-2">
                 <button
                   (click)="toggleStar(email)"
                   class="p-1.5 rounded-md hover:bg-accent text-muted-foreground"
@@ -355,8 +414,6 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
 
             <!-- Email body -->
             <div class="flex-1 overflow-y-auto p-6">
-              <h2 class="text-xl font-bold text-foreground mb-4">{{ email.subject }}</h2>
-
               <!-- From/To meta -->
               <div class="flex items-start gap-3 mb-6">
                 <div
@@ -406,8 +463,99 @@ type EmailTab = { key: EmailCategory; label: string; icon: string };
                 </div>
               </div>
             </div>
+
+            <!-- Bottom reply actions (React-like) -->
+            <div class="border-t border-border bg-background px-6 py-3">
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-accent"
+                  (click)="replyEmail(email)"
+                >
+                  <ng-icon name="lucideReply" class="h-4 w-4" />
+                  Reply
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-accent"
+                  (click)="replyAllEmail(email)"
+                >
+                  <ng-icon name="lucideReply" class="h-4 w-4" />
+                  Reply All
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:bg-accent"
+                  (click)="forwardEmail(email)"
+                >
+                  <ng-icon name="lucideForward" class="h-4 w-4" />
+                  Forward
+                </button>
+              </div>
+            </div>
           </ng-container>
         </ng-template>
+      </div>
+
+      <!-- Floating compose panel (React-like) -->
+      @if (composeOpen()) {
+        <div class="fixed bottom-4 right-4 z-50 w-[520px] max-w-[92vw] rounded-md border border-border bg-background shadow-xl">
+          <div class="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-2">
+            <div class="text-sm font-semibold text-foreground">New message</div>
+            <div class="flex items-center gap-2 text-muted-foreground">
+              <button type="button" class="p-1 hover:text-foreground" (click)="composeOpen.set(false)">
+                <ng-icon name="lucideX" class="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4">
+            <div class="flex items-center justify-between gap-3 border-b border-border pb-2">
+              <div class="text-sm text-muted-foreground w-10">To</div>
+              <input [(ngModel)]="composeTo" type="email" class="flex-1 bg-transparent text-sm text-foreground focus:outline-none" />
+              <div class="flex items-center gap-3 text-xs text-primary">
+                <button type="button" class="hover:underline" (click)="showCc = !showCc">Cc</button>
+                <button type="button" class="hover:underline" (click)="showBcc = !showBcc">Bcc</button>
+              </div>
+            </div>
+
+            @if (showCc) {
+              <div class="mt-2 flex items-center gap-3 border-b border-border pb-2">
+                <div class="text-sm text-muted-foreground w-10">Cc</div>
+                <input [(ngModel)]="composeCc" type="text" class="flex-1 bg-transparent text-sm text-foreground focus:outline-none" />
+              </div>
+            }
+
+            @if (showBcc) {
+              <div class="mt-2 flex items-center gap-3 border-b border-border pb-2">
+                <div class="text-sm text-muted-foreground w-10">Bcc</div>
+                <input [(ngModel)]="composeBcc" type="text" class="flex-1 bg-transparent text-sm text-foreground focus:outline-none" />
+              </div>
+            }
+
+            <div class="mt-2 flex items-center gap-3 border-b border-border pb-2">
+              <div class="text-sm text-muted-foreground w-10">Subject</div>
+              <input [(ngModel)]="composeSubject" type="text" class="flex-1 bg-transparent text-sm text-foreground focus:outline-none" />
+            </div>
+
+            <div class="mt-3">
+              <textarea
+                [(ngModel)]="composeBody"
+                class="h-40 w-full resize-none rounded-md border border-border bg-background p-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
+              ></textarea>
+            </div>
+
+            <div class="mt-4 flex items-center justify-end gap-3">
+              <button type="button" class="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent" (click)="discardCompose()">
+                Discard
+              </button>
+              <button type="button" class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90" (click)="sendEmail()">
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      }
       </div>
     </div>
   `,
@@ -418,7 +566,7 @@ export class EmailComponent implements OnInit {
   private readonly _router = inject(Router);
 
   // ── State signals ──────────────────────────────────────────────────────────
-  readonly activeCategory = signal<EmailCategory>('inbox');
+  readonly activeFolder = signal<MailFolder>('inbox');
   readonly emails = signal<Email[]>([]);
   readonly selectedEmail = signal<Email | null>(null);
   readonly isLoading = signal(false);
@@ -426,9 +574,17 @@ export class EmailComponent implements OnInit {
   readonly labels = signal<EmailLabel[]>([]);
   readonly totalCount = signal(0);
   readonly page = signal(1);
+  readonly filterMode = signal<ListFilterMode>('all');
+  readonly checkedEmailIds = signal<string[]>([]);
+  readonly unreadCounts = signal<Record<string, number>>({});
 
+  globalSearch = '';
   // Compose form state
   composeTo = '';
+  composeCc = '';
+  composeBcc = '';
+  showCc = false;
+  showBcc = false;
   composeSubject = '';
   composeBody = '';
   searchQuery = '';
@@ -436,17 +592,30 @@ export class EmailComponent implements OnInit {
   // ── Category tabs ──────────────────────────────────────────────────────────
   readonly tabs: EmailTab[] = [
     { key: 'inbox', label: 'Inbox', icon: 'lucideInbox' },
+    { key: 'starred', label: 'Starred', icon: 'lucideStar' },
     { key: 'sent', label: 'Sent', icon: 'lucideSend' },
-    { key: 'draft', label: 'Drafts', icon: 'lucideFileEdit' },
+    { key: 'draft', label: 'Draft', icon: 'lucideFileEdit' },
     { key: 'spam', label: 'Spam', icon: 'lucideAlertTriangle' },
     { key: 'trash', label: 'Trash', icon: 'lucideTrash2' },
   ];
 
   // ── Computed ───────────────────────────────────────────────────────────────
   readonly filteredEmails = computed(() => {
-    if (!this.searchQuery) return this.emails();
+    const base0 = this.emails();
+    const base1 = this.filterMode() === 'unread' ? base0.filter((e) => !e.isRead) : base0;
+    const base2 = this.globalSearch
+      ? base1.filter((e) => {
+          const q = this.globalSearch.toLowerCase();
+          return (
+            e.subject.toLowerCase().includes(q) ||
+            (e.from.name ?? '').toLowerCase().includes(q) ||
+            e.from.email.toLowerCase().includes(q)
+          );
+        })
+      : base1;
+    if (!this.searchQuery) return base2;
     const q = this.searchQuery.toLowerCase();
-    return this.emails().filter(
+    return base2.filter(
       (e) =>
         e.subject.toLowerCase().includes(q) ||
         e.from.email.toLowerCase().includes(q) ||
@@ -455,11 +624,19 @@ export class EmailComponent implements OnInit {
     );
   });
 
+  readonly isAllSelected = computed(() => {
+    const ids = this.filteredEmails().map((e) => e.emailId);
+    const checked = new Set(this.checkedEmailIds());
+    return ids.length > 0 && ids.every((id) => checked.has(id));
+  });
+
   ngOnInit(): void {
     // Sync active category from route params
     this._route.params.subscribe((params) => {
       if (params['category']) {
-        this.activeCategory.set(params['category'] as EmailCategory);
+        // keep route param in sync if used
+        const c = params['category'] as MailFolder;
+        this.activeFolder.set(c);
       }
       if (params['emailId']) {
         this._emailService.getEmail(params['emailId']).subscribe((e) => {
@@ -471,24 +648,84 @@ export class EmailComponent implements OnInit {
 
     this._emailService.getLabels().subscribe((l) => this.labels.set(l));
     this._loadEmails();
+    this._loadUnreadCounts();
   }
 
   private _loadEmails(): void {
     this.isLoading.set(true);
+    const folder = this.activeFolder();
+    if (folder === 'starred') {
+      this._loadStarred();
+      return;
+    }
     this._emailService
-      .getEmails({ category: this.activeCategory(), pageNo: this.page(), pageSize: 20 })
+      .getEmails({ category: folder, pageNo: this.page(), pageSize: 20 })
       .subscribe((res) => {
         this.emails.set(res.items);
         this.totalCount.set(res.totalCount);
         this.isLoading.set(false);
+        this.checkedEmailIds.set([]);
       });
   }
 
-  selectCategory(category: EmailCategory): void {
-    this.activeCategory.set(category);
+  private _loadStarred(): void {
+    const cats: EmailCategory[] = ['inbox', 'sent', 'draft', 'spam', 'trash'];
+    const all: Email[] = [];
+    let remaining = cats.length;
+    for (const c of cats) {
+      this._emailService.getEmails({ category: c, pageNo: 1, pageSize: 200 }).subscribe({
+        next: (res) => {
+          all.push(...(res.items ?? []));
+          remaining -= 1;
+          if (remaining === 0) {
+            const uniq = new Map<string, Email>();
+            for (const e of all) uniq.set(e.emailId, e);
+            const starred = Array.from(uniq.values()).filter((e) => e.isStarred);
+            this.emails.set(starred);
+            this.totalCount.set(starred.length);
+            this.isLoading.set(false);
+            this.checkedEmailIds.set([]);
+          }
+        },
+        error: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.emails.set([]);
+            this.totalCount.set(0);
+            this.isLoading.set(false);
+            this.checkedEmailIds.set([]);
+          }
+        },
+      });
+    }
+  }
+
+  private _loadUnreadCounts(): void {
+    const categories: EmailCategory[] = ['inbox', 'sent', 'draft', 'spam', 'trash'];
+    const next: Record<string, number> = {};
+    let remaining = categories.length;
+    for (const cat of categories) {
+      this._emailService.getEmails({ category: cat, pageNo: 1, pageSize: 200 }).subscribe({
+        next: (res) => {
+          next[cat] = (res.items ?? []).filter((e) => !e.isRead).length;
+          remaining -= 1;
+          if (remaining === 0) this.unreadCounts.set(next);
+        },
+        error: () => {
+          next[cat] = 0;
+          remaining -= 1;
+          if (remaining === 0) this.unreadCounts.set(next);
+        },
+      });
+    }
+  }
+
+  selectFolder(folder: MailFolder): void {
+    this.activeFolder.set(folder);
     this.selectedEmail.set(null);
     this.page.set(1);
     this._loadEmails();
+    this._loadUnreadCounts();
   }
 
   selectEmail(email: Email): void {
@@ -497,13 +734,31 @@ export class EmailComponent implements OnInit {
     // Mark as read
     if (!email.isRead) {
       this._emailService.markAsRead(email.emailId, true).subscribe();
+      this.emails.update((list) =>
+        list.map((e) => (e.emailId === email.emailId ? { ...e, isRead: true } : e))
+      );
+      this._loadUnreadCounts();
     }
   }
 
   openCompose(): void {
     this.composeOpen.set(true);
-    this.selectedEmail.set(null);
     this.composeTo = '';
+    this.composeCc = '';
+    this.composeBcc = '';
+    this.showCc = false;
+    this.showBcc = false;
+    this.composeSubject = '';
+    this.composeBody = '';
+  }
+
+  discardCompose(): void {
+    this.composeOpen.set(false);
+    this.composeTo = '';
+    this.composeCc = '';
+    this.composeBcc = '';
+    this.showCc = false;
+    this.showBcc = false;
     this.composeSubject = '';
     this.composeBody = '';
   }
@@ -516,8 +771,8 @@ export class EmailComponent implements OnInit {
         to: [{ email: this.composeTo }],
       })
       .subscribe(() => {
-        this.composeOpen.set(false);
-        if (this.activeCategory() === 'sent') this._loadEmails();
+        this.discardCompose();
+        if (this.activeFolder() === 'sent') this._loadEmails();
       });
   }
 
@@ -545,6 +800,14 @@ export class EmailComponent implements OnInit {
     this.composeOpen.set(true);
   }
 
+  replyAllEmail(email: Email): void {
+    const tos = [email.from.email, ...(email.to ?? []).map((t) => t.email)].filter(Boolean);
+    this.composeTo = Array.from(new Set(tos)).join(', ');
+    this.composeSubject = `Re: ${email.subject}`;
+    this.composeBody = `\n\n---\nOn ${email.createdAt}, ${email.from.email} wrote:\n${email.bodyText}`;
+    this.composeOpen.set(true);
+  }
+
   forwardEmail(email: Email): void {
     this.composeTo = '';
     this.composeSubject = `Fwd: ${email.subject}`;
@@ -556,11 +819,17 @@ export class EmailComponent implements OnInit {
     this._emailService.moveToTrash(email.emailId).subscribe(() => {
       this.emails.update((list) => list.filter((e) => e.emailId !== email.emailId));
       this.selectedEmail.set(null);
+      this._loadUnreadCounts();
     });
   }
 
   refresh(): void {
     this._loadEmails();
+    this._loadUnreadCounts();
+  }
+
+  onGlobalSearchChanged(): void {
+    // purely client-side filtering for parity UI
   }
   prevPage(): void {
     if (this.page() > 1) {
@@ -571,5 +840,60 @@ export class EmailComponent implements OnInit {
   nextPage(): void {
     this.page.update((p) => p + 1);
     this._loadEmails();
+  }
+
+  unreadCount(cat: EmailCategory): number {
+    return Number(this.unreadCounts()?.[cat] ?? 0);
+  }
+
+  isChecked(id: string): boolean {
+    return this.checkedEmailIds().includes(id);
+  }
+
+  toggleChecked(id: string): void {
+    this.checkedEmailIds.update((cur) => {
+      const set = new Set(cur);
+      if (set.has(id)) set.delete(id);
+      else set.add(id);
+      return Array.from(set);
+    });
+  }
+
+  toggleSelectAll(): void {
+    const ids = this.filteredEmails().map((e) => e.emailId);
+    if (this.isAllSelected()) {
+      this.checkedEmailIds.set([]);
+      return;
+    }
+    this.checkedEmailIds.set(ids);
+  }
+
+  bulkMarkRead(isRead: boolean): void {
+    const ids = this.checkedEmailIds();
+    if (ids.length === 0) return;
+    for (const id of ids) this._emailService.markAsRead(id, isRead).subscribe();
+    this.emails.update((list) => list.map((e) => (ids.includes(e.emailId) ? { ...e, isRead } : e)));
+    this.checkedEmailIds.set([]);
+    this._loadUnreadCounts();
+  }
+
+  bulkMoveToTrash(): void {
+    const ids = this.checkedEmailIds();
+    if (ids.length === 0) return;
+    for (const id of ids) this._emailService.moveToTrash(id).subscribe();
+    this.emails.update((list) => list.filter((e) => !ids.includes(e.emailId)));
+    this.checkedEmailIds.set([]);
+    this.selectedEmail.set(null);
+    this._loadUnreadCounts();
+  }
+
+  bulkMoveToSpam(): void {
+    // Service is mock; mimic UX by removing from current list.
+    const ids = this.checkedEmailIds();
+    if (ids.length === 0) return;
+    this.emails.update((list) => list.filter((e) => !ids.includes(e.emailId)));
+    this.checkedEmailIds.set([]);
+    this.selectedEmail.set(null);
+    this._loadUnreadCounts();
   }
 }

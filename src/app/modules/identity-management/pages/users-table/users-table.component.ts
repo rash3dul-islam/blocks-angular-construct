@@ -20,6 +20,7 @@ import {
   lucidePencil,
   lucideTrash2,
   lucideUser,
+  lucideMail,
   lucideShieldCheck,
   lucideMoreHorizontal,
   lucideCalendar,
@@ -43,6 +44,14 @@ import {
   HlmDialogDescription,
   HlmDialogTrigger,
 } from '@spartan-ng/helm/dialog';
+import { BrnSheetContent } from '@spartan-ng/brain/sheet';
+import {
+  HlmSheet,
+  HlmSheetContent,
+  HlmSheetHeader,
+  HlmSheetTitle,
+  HlmSheetDescription,
+} from '../../../../components/ui-kit/sheet/src';
 import {
   HlmSelect,
   HlmSelectContent,
@@ -82,6 +91,12 @@ import { TranslateModule } from '@ngx-translate/core';
     HlmSelectItem,
     HlmSelectTrigger,
     HlmSelectValue,
+    BrnSheetContent,
+    HlmSheet,
+    HlmSheetContent,
+    HlmSheetHeader,
+    HlmSheetTitle,
+    HlmSheetDescription,
   ],
   viewProviders: [
     provideIcons({
@@ -89,6 +104,7 @@ import { TranslateModule } from '@ngx-translate/core';
       lucidePencil,
       lucideTrash2,
       lucideUser,
+      lucideMail,
       lucideShieldCheck,
       lucideMoreHorizontal,
       lucideCalendar,
@@ -187,38 +203,96 @@ import { TranslateModule } from '@ngx-translate/core';
         </div>
       }
 
-      @if (detailsUser()) {
-        <div class="rounded-lg border border-border bg-card p-4 shadow-sm">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="text-base font-semibold text-foreground">
-                {{ displayName(detailsUser()!) }}
+      <!-- View details (React shows a right-side sheet). -->
+      <hlm-sheet
+        [state]="detailsOpen() ? 'open' : 'closed'"
+        (stateChanged)="onDetailsStateChanged($event)"
+      >
+        <hlm-sheet-content *brnSheetContent="let ctx" side="right" class="w-full sm:min-w-[450px]">
+          <hlm-sheet-header class="hidden">
+            <h3 hlmSheetTitle></h3>
+            <p hlmSheetDescription></p>
+          </hlm-sheet-header>
+
+          @if (detailsUser()) {
+            <div class="flex h-full flex-col justify-between gap-6 p-6">
+              <div class="flex flex-col">
+                <div class="mb-4 flex items-center justify-between">
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-border bg-muted text-xl font-bold text-foreground shadow-sm"
+                    >
+                      {{ userInitials(detailsUser()!) }}
+                    </div>
+                    <div>
+                      <h2 class="text-2xl font-bold text-foreground">
+                        {{ displayName(detailsUser()!) }}
+                      </h2>
+                      <div class="mt-1 flex items-center gap-2">
+                        <span
+                          class="h-1.5 w-1.5 rounded-full"
+                          [class.bg-construct-success-fg]="detailsUser()!.active"
+                          [class.bg-destructive]="!detailsUser()!.active"
+                        ></span>
+                        <span
+                          class="text-sm"
+                          [class.text-construct-success-fg]="detailsUser()!.active"
+                          [class.text-destructive]="!detailsUser()!.active"
+                        >
+                          {{ detailsUser()!.active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="h-px w-full bg-border mb-6"></div>
+
+                <div class="space-y-5">
+                  <div class="flex items-start gap-4">
+                    <div class="w-24 text-base font-thin text-muted-foreground">Email</div>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2">
+                        <ng-icon name="lucideMail" class="h-5 w-5 text-foreground shrink-0" />
+                        <div class="break-words text-base font-normal text-foreground">
+                          {{ detailsUser()!.email }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start gap-4">
+                    <div class="w-24 text-base font-thin text-muted-foreground">Joined On</div>
+                    <div class="flex-1 text-base text-foreground">
+                      {{ formatDate(detailsUser()!.createdDate ?? detailsUser()!.createdAt) }}
+                    </div>
+                  </div>
+
+                  <div class="flex items-start gap-4">
+                    <div class="w-24 text-base font-thin text-muted-foreground">Last Login</div>
+                    <div class="flex-1 text-base text-foreground">
+                      {{ formatLastLogin(detailsUser()!.lastLoggedInTime) }}
+                    </div>
+                  </div>
+
+                  <div class="flex items-start gap-4">
+                    <div class="w-24 text-base font-thin text-muted-foreground">MFA</div>
+                    <div class="flex-1 text-base text-foreground">
+                      {{ detailsUser()!.mfaEnabled ? 'Enabled' : 'Disabled' }}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="mt-1 text-sm text-muted-foreground">{{ detailsUser()!.email }}</div>
-              <div class="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span class="rounded-md border border-border px-2 py-0.5"
-                  >ID: {{ detailsUser()!.ItemId }}</span
-                >
-                <span class="rounded-md border border-border px-2 py-0.5"
-                  >MFA: {{ detailsUser()!.mfaEnabled ? 'Enabled' : 'Disabled' }}</span
-                >
-                <span class="rounded-md border border-border px-2 py-0.5"
-                  >Status: {{ detailsUser()!.active ? 'Active' : 'Inactive' }}</span
-                >
+
+              <div class="flex w-full flex-col gap-2">
+                <button hlmBtn variant="outline" class="w-full" type="button" (click)="ctx.close()">
+                  Close
+                </button>
               </div>
             </div>
-            <button
-              hlmBtn
-              variant="outline"
-              size="sm"
-              type="button"
-              (click)="detailsUser.set(null)"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      }
+          }
+        </hlm-sheet-content>
+      </hlm-sheet>
 
       <!-- Toolbar (React IamTableToolbar layout) -->
       <div
@@ -226,7 +300,7 @@ import { TranslateModule } from '@ngx-translate/core';
       >
         <div class="relative min-w-[200px] flex-1 max-w-md">
           <ng-icon
-            name="lucideUser"
+            [name]="searchMode() === 'email' ? 'lucideMail' : 'lucideUser'"
             class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           />
           <input
@@ -234,9 +308,23 @@ import { TranslateModule } from '@ngx-translate/core';
             [(ngModel)]="searchDraft"
             [ngModelOptions]="{ standalone: true }"
             (ngModelChange)="searchChanged($event)"
-            placeholder="Search by name..."
-            class="h-9 w-full pl-9 pr-3 text-sm"
+            [placeholder]="searchMode() === 'email' ? 'Search by email...' : 'Search by name...'"
+            class="h-9 w-full rounded-lg bg-background pl-9 pr-12 text-sm"
           />
+          <button
+            type="button"
+            hlmBtn
+            variant="ghost"
+            size="sm"
+            class="absolute right-1 top-1/2 h-7 -translate-y-1/2"
+            (click)="toggleSearchMode()"
+            aria-label="Toggle search mode"
+          >
+            <ng-icon
+              [name]="searchMode() === 'email' ? 'lucideUser' : 'lucideMail'"
+              class="h-4 w-4"
+            />
+          </button>
         </div>
         <button
           type="button"
@@ -397,41 +485,10 @@ import { TranslateModule } from '@ngx-translate/core';
                           <button
                             type="button"
                             class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                            (click)="editUser(user); openMenuUserId.set(null)"
-                          >
-                            <ng-icon name="lucidePencil" class="h-4 w-4" /> Edit
-                          </button>
-                          <button
-                            type="button"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
                             (click)="viewDetails(user); openMenuUserId.set(null)"
                           >
                             <ng-icon name="lucideUser" class="h-4 w-4" />
                             {{ 'IAM.VIEW_DETAILS' | translate }}
-                          </button>
-                          <button
-                            type="button"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                            (click)="resetPassword(user); openMenuUserId.set(null)"
-                          >
-                            <ng-icon name="lucideShieldCheck" class="h-4 w-4" />
-                            {{ 'IAM.RESET_PASSWORD' | translate }}
-                          </button>
-                          <button
-                            type="button"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
-                            (click)="deactivateUser(user); openMenuUserId.set(null)"
-                            [disabled]="!user.active"
-                          >
-                            <ng-icon name="lucideTrash2" class="h-4 w-4" />
-                            {{ 'IAM.DEACTIVATE_USER' | translate }}
-                          </button>
-                          <button
-                            type="button"
-                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
-                            (click)="deleteUser(user); openMenuUserId.set(null)"
-                          >
-                            <ng-icon name="lucideTrash2" class="h-4 w-4" /> Delete
                           </button>
                         </div>
                       }
@@ -540,9 +597,12 @@ export class UsersTableComponent implements OnInit {
   readonly editingUser = signal<IamUser | null>(null);
   readonly openMenuUserId = signal<string | null>(null);
   readonly detailsUser = signal<IamUser | null>(null);
+  readonly detailsOpen = signal(false);
   readonly bannerMessage = signal('');
 
   searchDraft = '';
+  readonly searchMode = signal<'name' | 'email'>('name');
+  private readonly _filters = signal<{ name: string; email: string }>({ name: '', email: '' });
   readonly pageSizeOptions = [10, 20, 50];
 
   readonly availableRoles = ['Admin', 'Manager', 'Developer', 'User', 'Viewer'];
@@ -566,28 +626,49 @@ export class UsersTableComponent implements OnInit {
   constructor() {
     this.searchSubject
       .pipe(debounceTime(450), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((name) => {
+      .subscribe((raw) => {
+        const v = (raw ?? '').trim();
+        const cur = this._filters();
+        const next =
+          this.searchMode() === 'email' ? { ...cur, email: v } : { ...cur, name: v };
+        this._filters.set(next);
         this.pageIndex.set(0);
-        this.loadUsers(name);
+        this.loadUsers(next);
       });
   }
 
   ngOnInit(): void {
-    this.loadUsers('');
+    this.loadUsers(this._filters());
   }
 
   searchChanged(value: string): void {
     this.searchSubject.next((value ?? '').trim());
   }
 
-  loadUsers(nameFilter: string): void {
+  toggleSearchMode(): void {
+    const next = this.searchMode() === 'email' ? 'name' : 'email';
+    const curFilters = this._filters();
+    this.searchMode.set(next);
+    // Keep the current typed value, but move it to the other field like React.
+    const typed = (this.searchDraft ?? '').trim();
+    const swapped =
+      next === 'email'
+        ? { name: '', email: typed || curFilters.email }
+        : { email: '', name: typed || curFilters.name };
+    this._filters.set(swapped);
+    this.searchDraft = swapped[next];
+    this.pageIndex.set(0);
+    this.loadUsers(swapped);
+  }
+
+  loadUsers(filters: { name: string; email: string }): void {
     this.loading.set(true);
     this.openMenuUserId.set(null);
     this.iamService
       .getUsers({
         page: this.pageIndex(),
         pageSize: this.pageSize(),
-        filter: { name: nameFilter, email: '' },
+        filter: { name: filters.name, email: filters.email },
       })
       .subscribe({
         next: (res) => {
@@ -608,27 +689,27 @@ export class UsersTableComponent implements OnInit {
     if (!Number.isFinite(n) || n <= 0) return;
     this.pageSize.set(n);
     this.pageIndex.set(0);
-    this.loadUsers(this.searchDraft.trim());
+    this.loadUsers(this._filters());
   }
 
   goFirstPage(): void {
     this.pageIndex.set(0);
-    this.loadUsers(this.searchDraft.trim());
+    this.loadUsers(this._filters());
   }
 
   goPrevPage(): void {
     this.pageIndex.update((i) => Math.max(0, i - 1));
-    this.loadUsers(this.searchDraft.trim());
+    this.loadUsers(this._filters());
   }
 
   goNextPage(): void {
     this.pageIndex.update((i) => Math.min(this.totalPages() - 1, i + 1));
-    this.loadUsers(this.searchDraft.trim());
+    this.loadUsers(this._filters());
   }
 
   goLastPage(): void {
     this.pageIndex.set(this.totalPages() - 1);
-    this.loadUsers(this.searchDraft.trim());
+    this.loadUsers(this._filters());
   }
 
   toggleRowMenu(id: string): void {
@@ -718,12 +799,21 @@ export class UsersTableComponent implements OnInit {
     const confirmed = window.confirm(`Delete user ${this.displayName(user)}?`);
     if (!confirmed) return;
     this.iamService.deleteUser(user.ItemId).subscribe(() => {
-      this.loadUsers(this.searchDraft.trim());
+      this.loadUsers(this._filters());
     });
   }
 
   viewDetails(user: IamUser): void {
     this.detailsUser.set(user);
+    this.detailsOpen.set(true);
+  }
+
+  onDetailsStateChanged(state: 'open' | 'closed'): void {
+    const open = state === 'open';
+    this.detailsOpen.set(open);
+    if (!open) {
+      this.detailsUser.set(null);
+    }
   }
 
   resetPassword(user: IamUser): void {

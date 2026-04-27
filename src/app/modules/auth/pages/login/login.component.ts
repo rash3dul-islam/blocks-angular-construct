@@ -12,6 +12,7 @@ import { AuthLoginOptionsService } from '../../services/auth-login-options.servi
 import { SsoService } from '../../services/sso.service';
 import { GRANT_TYPES } from '../../types/login-options.types';
 import { ssoProviderImageSrc } from '@constant/social-auth.constant';
+import { strictEmailValidator } from '../../validators/strict-email.validator';
 
 const DEMO_BANNER_HOSTS: readonly string[] = [
   'localhost',
@@ -204,7 +205,7 @@ export class LoginComponent implements OnInit {
   );
 
   readonly loginForm = this._fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, strictEmailValidator()]],
     password: ['', [Validators.required]],
   });
 

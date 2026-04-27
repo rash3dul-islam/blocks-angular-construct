@@ -9,6 +9,7 @@ import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideLoader, lucideArrowLeft } from '@ng-icons/lucide';
 import { AuthService } from '../../services/auth.service';
 import { idpErrorMessage } from '../../utils/idp-error.util';
+import { strictEmailValidator } from '../../validators/strict-email.validator';
 
 @Component({
   selector: 'app-forgot-password',
@@ -16,42 +17,47 @@ import { idpErrorMessage } from '../../utils/idp-error.util';
   imports: [ReactiveFormsModule, RouterLink, NgIf, NgIconComponent],
   viewProviders: [provideIcons({ lucideLoader, lucideArrowLeft })],
   template: `
-    <div class="bg-card rounded-xl border border-border p-8 shadow-sm">
+    <div class="flex w-full flex-col gap-6">
       <a
         routerLink="/login"
-        class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6"
+        class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ng-icon name="lucideArrowLeft" class="w-4 h-4" /> Back to sign in
       </a>
 
-      <div class="mb-6">
-        <h1 class="text-2xl font-bold text-foreground">Forgot password?</h1>
-        <p class="text-muted-foreground text-sm mt-1">
-          Enter your email and we'll send you a reset link
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Forgot password?</h1>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Enter your email and we&apos;ll send you a reset link
         </p>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div
+        *ngIf="errorMessage()"
+        class="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+      >
+        {{ errorMessage() }}
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex w-full flex-col gap-4">
         <div class="space-y-1.5">
-          <label class="text-sm font-medium text-foreground">Email address</label>
+          <label class="text-sm font-medium text-foreground" for="email">Email</label>
           <input
+            id="email"
             type="email"
             formControlName="email"
-            placeholder="you@example.com"
-            class="w-full h-10 px-3 rounded-md border border-input bg-background text-sm
-                   focus:outline-none focus:ring-2 focus:ring-ring"
+            placeholder="Enter your email"
+            autocomplete="email"
+            class="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
             [class.border-destructive]="fieldInvalid"
           />
           <p *ngIf="fieldInvalid" class="text-destructive text-xs">Enter a valid email address.</p>
         </div>
 
-        <p *ngIf="errorMessage()" class="text-destructive text-sm">{{ errorMessage() }}</p>
-
         <button
           type="submit"
           [disabled]="isLoading() || form.invalid"
-          class="w-full h-10 bg-primary text-primary-foreground rounded-md text-sm font-medium
-                 hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          class="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ng-icon *ngIf="isLoading()" name="lucideLoader" class="w-4 h-4 animate-spin" />
           {{ isLoading() ? 'Sending...' : 'Send reset link' }}
@@ -69,7 +75,7 @@ export class ForgotPasswordComponent {
   readonly errorMessage = signal('');
 
   readonly form = this._fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, strictEmailValidator()]],
   });
 
   get fieldInvalid(): boolean {

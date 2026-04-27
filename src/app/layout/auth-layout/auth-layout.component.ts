@@ -17,8 +17,8 @@ const THEME_STORAGE_KEY = 'theme';
   imports: [RouterOutlet, NgIconComponent],
   viewProviders: [provideIcons({ lucideMoon, lucideSun, lucideChevronDown, lucideAlertTriangle })],
   template: `
-    <div class="flex min-h-screen w-full flex-col">
-      <div class="relative flex min-h-screen w-full flex-1">
+    <div class="flex h-screen w-full flex-col overflow-hidden">
+      <div class="relative flex min-h-screen w-full flex-1 overflow-hidden">
         <div class="relative hidden w-[36%] shrink-0 bg-auth-panel md:block">
           <img
             [src]="authBgSrc()"
@@ -29,7 +29,7 @@ const THEME_STORAGE_KEY = 'theme';
         </div>
 
         <div
-          class="relative flex min-h-screen w-full flex-1 items-center justify-center bg-background px-6 sm:px-12 md:w-[64%] md:px-[14%] lg:px-[16%] 2xl:px-[20%]"
+          class="relative flex w-full flex-1 items-center justify-center bg-background px-6 sm:px-20 md:w-[64%] md:px-[14%] lg:px-[16%] 2xl:px-[20%]"
         >
           <div class="absolute right-4 top-2 z-10 flex flex-row gap-1">
             <button
