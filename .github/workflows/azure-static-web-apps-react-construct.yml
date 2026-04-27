@@ -24,6 +24,10 @@ jobs:
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         env:
+          # npm registry flakiness (ECONNRESET) during Oryx `npm install`
+          NPM_CONFIG_FETCH_RETRIES: "5"
+          NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "20000"
+          NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_X_BLOCKS_KEY: ${{ secrets.VITE_X_BLOCKS_KEY }}
           VITE_PROJECT_SLUG: ${{ secrets.VITE_PROJECT_SLUG }}
