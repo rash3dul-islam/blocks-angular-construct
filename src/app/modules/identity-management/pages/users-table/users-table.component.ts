@@ -56,6 +56,7 @@ import {
   HlmSelect,
   HlmSelectContent,
   HlmSelectItem,
+  HlmSelectPortal,
   HlmSelectTrigger,
   HlmSelectValue,
 } from '@spartan-ng/helm/select';
@@ -89,6 +90,7 @@ import { TranslateModule } from '@ngx-translate/core';
     HlmSelect,
     HlmSelectContent,
     HlmSelectItem,
+    HlmSelectPortal,
     HlmSelectTrigger,
     HlmSelectValue,
     BrnSheetContent,
@@ -515,11 +517,13 @@ import { TranslateModule } from '@ngx-translate/core';
             <hlm-select-trigger class="h-8 w-[4.5rem]">
               <hlm-select-value />
             </hlm-select-trigger>
-            <hlm-select-content>
-              @for (n of pageSizeOptions; track n) {
-                <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
-              }
-            </hlm-select-content>
+            <ng-template hlmSelectPortal>
+              <hlm-select-content>
+                @for (n of pageSizeOptions; track n) {
+                  <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </ng-template>
           </hlm-select>
         </div>
         <div class="flex items-center gap-4">

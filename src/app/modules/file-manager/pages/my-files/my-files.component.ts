@@ -34,13 +34,32 @@ import {
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import { BrnDialogContent } from '@spartan-ng/brain/dialog';
+import {
+  HlmDialog,
+  HlmDialogContent,
+  HlmDialogFooter,
+  HlmDialogHeader,
+} from '@spartan-ng/helm/dialog';
 import { FileManagerService } from '../../services/file-manager.service';
 import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-manager.model';
 
 @Component({
   selector: 'app-my-files',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NgIconComponent, HlmButton, HlmInput],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    NgIconComponent,
+    HlmButton,
+    HlmInput,
+    BrnDialogContent,
+    HlmDialog,
+    HlmDialogContent,
+    HlmDialogHeader,
+    HlmDialogFooter,
+  ],
   viewProviders: [
     provideIcons({
       lucideLayoutGrid,
@@ -240,6 +259,98 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       </nav>
 
       <input #fileInput type="file" multiple class="hidden" (change)="onFilesPicked($event)" />
+
+      <!-- Upload modal (React: file upload modal) -->
+      @if (uploadOpen()) {
+        <hlm-dialog state="open" (closed)="closeUploadModal()">
+          <hlm-dialog-content class="sm:max-w-lg" *brnDialogContent="let ctx">
+            <hlm-dialog-header>
+              <h2 class="text-lg font-semibold">Upload files</h2>
+              <p class="text-sm text-muted-foreground">Select one or more files to upload.</p>
+            </hlm-dialog-header>
+
+            <div class="mt-4 space-y-3">
+              <button hlmBtn variant="outline" type="button" class="w-full" (click)="pickFiles()">
+                Choose files
+              </button>
+
+              @if (pendingUploads().length === 0) {
+                <div class="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
+                  No files selected yet.
+                </div>
+              } @else {
+                <div class="rounded-md border border-border divide-y divide-border">
+                  @for (f of pendingUploads(); track f.name) {
+                    <div class="flex items-center justify-between gap-3 p-3 text-sm">
+                      <div class="min-w-0">
+                        <div class="truncate font-medium text-foreground">{{ f.name }}</div>
+                        <div class="text-xs text-muted-foreground">{{ formatBytes(f.size) }}</div>
+                      </div>
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        class="text-destructive"
+                        (click)="removePendingUpload(f)"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <hlm-dialog-footer class="mt-6">
+              <button hlmBtn variant="outline" type="button" (click)="closeUploadModal()">
+                Cancel
+              </button>
+              <button
+                hlmBtn
+                type="button"
+                [disabled]="pendingUploads().length === 0 || uploading()"
+                (click)="confirmUpload()"
+              >
+                @if (uploading()) { Uploading... } @else { Upload }
+              </button>
+            </hlm-dialog-footer>
+          </hlm-dialog-content>
+        </hlm-dialog>
+      }
+
+      <!-- Rename modal (React: RenameFile) -->
+      @if (renameOpen() && renamingItem(); as it) {
+        <hlm-dialog state="open" (closed)="closeRenameModal()">
+          <hlm-dialog-content class="sm:max-w-md" *brnDialogContent="let ctx">
+            <hlm-dialog-header>
+              <h2 class="text-lg font-semibold">Rename</h2>
+              <p class="text-sm text-muted-foreground">Change the name of “{{ it.name }}”.</p>
+            </hlm-dialog-header>
+
+            <div class="mt-4 space-y-2">
+              <label class="text-sm font-medium">New name</label>
+              <input
+                hlmInput
+                class="h-10"
+                [ngModel]="renameDraft()"
+                (ngModelChange)="renameDraft.set($event)"
+                (keydown.enter)="confirmRename()"
+              />
+              @if (renameError()) {
+                <div class="text-sm text-destructive">{{ renameError() }}</div>
+              }
+            </div>
+
+            <hlm-dialog-footer class="mt-6">
+              <button hlmBtn variant="outline" type="button" (click)="closeRenameModal()">
+                Cancel
+              </button>
+              <button hlmBtn type="button" (click)="confirmRename()">Save</button>
+            </hlm-dialog-footer>
+          </hlm-dialog-content>
+        </hlm-dialog>
+      }
 
       @if (viewMode() === 'list') {
         <div
@@ -592,6 +703,13 @@ export class MyFilesComponent {
   readonly detailsItem = signal<FileItem | null>(null);
   readonly createFolderOpen = signal(false);
   readonly newFolderName = signal('');
+  readonly uploadOpen = signal(false);
+  readonly pendingUploads = signal<File[]>([]);
+  readonly uploading = signal(false);
+  readonly renameOpen = signal(false);
+  readonly renamingItem = signal<FileItem | null>(null);
+  readonly renameDraft = signal('');
+  readonly renameError = signal('');
 
   readonly pageSizeOptions = [10, 25, 50];
   readonly typeOptions: { value: FileItemKind | ''; label: string }[] = [
@@ -638,6 +756,77 @@ export class MyFilesComponent {
     this.createFolderOpen.set(false);
     this.newFolderName.set('');
   };
+
+  openUploadModal(): void {
+    this.uploadOpen.set(true);
+    this.pendingUploads.set([]);
+    this.uploading.set(false);
+  }
+
+  closeUploadModal(): void {
+    this.uploadOpen.set(false);
+    this.pendingUploads.set([]);
+    this.uploading.set(false);
+  }
+
+  pickFiles(): void {
+    document.querySelector<HTMLInputElement>('app-my-files input[type=file]')?.click();
+  }
+
+  removePendingUpload(f: File): void {
+    this.pendingUploads.update((list) => list.filter((x) => x !== f));
+  }
+
+  confirmUpload(): void {
+    const parent = this._folderId();
+    const files = this.pendingUploads();
+    if (files.length === 0) return;
+    this.uploading.set(true);
+    let remaining = files.length;
+    for (const file of files) {
+      this._fileService.uploadFile({ file, parentId: parent }).subscribe({
+        next: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.uploading.set(false);
+            this.closeUploadModal();
+            this.load();
+          }
+        },
+        error: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.uploading.set(false);
+            this.closeUploadModal();
+            this.load();
+          }
+        },
+      });
+    }
+  }
+
+  closeRenameModal(): void {
+    this.renameOpen.set(false);
+    this.renamingItem.set(null);
+    this.renameDraft.set('');
+    this.renameError.set('');
+  }
+
+  confirmRename(): void {
+    const it = this.renamingItem();
+    if (!it) return;
+    const next = (this.renameDraft() ?? '').trim();
+    if (!next) {
+      this.renameError.set('Name is required.');
+      return;
+    }
+    if (next === it.name) {
+      this.closeRenameModal();
+      return;
+    }
+    this.files.update((list) => list.map((f) => (f.fileId === it.fileId ? { ...f, name: next } : f)));
+    this.closeRenameModal();
+  }
 
   private _parseBreadcrumbParam(folderId: string | null): { id: string; name: string }[] {
     if (!folderId) return [];
@@ -748,9 +937,10 @@ export class MyFilesComponent {
 
   renameItem(item: FileItem): void {
     this.rowMenuId.set(null);
-    const name = prompt('New name', item.name);
-    if (!name || name === item.name) return;
-    this.files.update((list) => list.map((f) => (f.fileId === item.fileId ? { ...f, name } : f)));
+    this.renameError.set('');
+    this.renamingItem.set(item);
+    this.renameDraft.set(item.name);
+    this.renameOpen.set(true);
   }
 
   deleteItem(item: FileItem): void {
@@ -780,21 +970,15 @@ export class MyFilesComponent {
 
   triggerUpload(): void {
     this.addMenuOpen.set(false);
-    document.querySelector<HTMLInputElement>('app-my-files input[type=file]')?.click();
+    this.openUploadModal();
+    this.pickFiles();
   }
 
   onFilesPicked(ev: Event): void {
     const input = ev.target as HTMLInputElement;
-    const parent = this._folderId();
     const files = Array.from(input.files ?? []);
     if (!files.length) return;
-    let pending = files.length;
-    for (const file of files) {
-      this._fileService.uploadFile({ file, parentId: parent }).subscribe(() => {
-        pending -= 1;
-        if (pending === 0) this.load();
-      });
-    }
+    this.pendingUploads.set(files);
     input.value = '';
   }
 
@@ -874,5 +1058,9 @@ export class MyFilesComponent {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  formatBytes(bytes: number): string {
+    return this._fmtBytes(bytes);
   }
 }

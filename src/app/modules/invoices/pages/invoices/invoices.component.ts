@@ -19,6 +19,7 @@ import {
   HlmSelect,
   HlmSelectContent,
   HlmSelectItem,
+  HlmSelectPortal,
   HlmSelectTrigger,
   HlmSelectValue,
 } from '@spartan-ng/helm/select';
@@ -38,6 +39,7 @@ import type { InvoiceItem } from '../../types/invoices.types';
     HlmSelect,
     HlmSelectContent,
     HlmSelectItem,
+    HlmSelectPortal,
     HlmSelectTrigger,
     HlmSelectValue,
   ],
@@ -211,11 +213,13 @@ import type { InvoiceItem } from '../../types/invoices.types';
               <hlm-select-trigger class="h-8 w-[4.5rem]">
                 <hlm-select-value />
               </hlm-select-trigger>
-              <hlm-select-content>
-                @for (n of pageSizeOptions; track n) {
-                  <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
-                }
-              </hlm-select-content>
+              <ng-template hlmSelectPortal>
+                <hlm-select-content>
+                  @for (n of pageSizeOptions; track n) {
+                    <hlm-select-item [value]="n">{{ n }}</hlm-select-item>
+                  }
+                </hlm-select-content>
+              </ng-template>
             </hlm-select>
           </div>
 

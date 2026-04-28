@@ -65,7 +65,8 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        // React parity: `react_Constract` uses Nunito Sans globally.
+        sans: ['"Nunito Sans"', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

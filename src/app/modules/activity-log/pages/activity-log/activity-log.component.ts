@@ -9,6 +9,20 @@ import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { lucideSearch, lucidePlusCircle, lucideCheck, lucideX } from '@ng-icons/lucide';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmButton } from '@spartan-ng/helm/button';
+import {
+  HlmPopover,
+  HlmPopoverContent,
+  HlmPopoverPortal,
+  HlmPopoverTrigger,
+} from '../../../../components/ui-kit/popover/src';
+import { BrnCommandInput } from '@spartan-ng/brain/command';
+import {
+  HlmCommand,
+  HlmCommandEmpty,
+  HlmCommandGroup,
+  HlmCommandItem,
+  HlmCommandList,
+} from '../../../../components/ui-kit/command/src';
 import { getFormattedDateLabel } from '../../utils/activity-date-label.util';
 import {
   TIMELINE_ACTIVITIES_DATA,
@@ -23,7 +37,23 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
 @Component({
   selector: 'app-activity-log',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIconComponent, HlmInput, HlmButton],
+  imports: [
+    CommonModule,
+    FormsModule,
+    NgIconComponent,
+    HlmInput,
+    HlmButton,
+    HlmPopover,
+    HlmPopoverTrigger,
+    HlmPopoverPortal,
+    HlmPopoverContent,
+    HlmCommand,
+    BrnCommandInput,
+    HlmCommandList,
+    HlmCommandEmpty,
+    HlmCommandGroup,
+    HlmCommandItem,
+  ],
   viewProviders: [provideIcons({ lucideSearch, lucidePlusCircle, lucideCheck, lucideX })],
   template: `
     <div class="flex w-full flex-col p-6">
@@ -49,104 +79,140 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
             />
           </div>
 
-          <div class="relative">
+          <hlm-popover
+            #datePopover="brnPopover"
+            [autoFocus]="'dialog'"
+            [closeOnOutsidePointerEvents]="true"
+            [sideOffset]="6"
+            align="end"
+          >
             <button
               hlmBtn
+              hlmPopoverTrigger
+              [hlmPopoverTriggerFor]="datePopover"
               variant="outline"
               size="sm"
               type="button"
               class="h-8 border-dashed w-full sm:w-auto justify-center"
-              (click)="$event.stopPropagation(); datePanelOpen.update((v) => !v)"
             >
               <ng-icon name="lucidePlusCircle" class="w-4 h-4 mr-1 shrink-0" />
               Date
             </button>
-            @if (datePanelOpen()) {
-              <div
-                class="absolute right-0 z-50 mt-1 w-[min(100vw-2rem,280px)] rounded-lg border border-border bg-popover p-3 shadow-md"
-                (click)="$event.stopPropagation()"
-              >
-                <p class="text-xs font-medium text-foreground mb-2">Date range</p>
-                <div class="flex flex-col gap-2">
-                  <input
-                    hlmInput
-                    type="date"
-                    class="h-8 text-sm"
-                    [ngModel]="dateFrom()"
-                    (ngModelChange)="setDateFrom($event)"
-                  />
-                  <input
-                    hlmInput
-                    type="date"
-                    class="h-8 text-sm"
-                    [ngModel]="dateTo()"
-                    (ngModelChange)="setDateTo($event)"
-                  />
+            <ng-template hlmPopoverPortal>
+              <div hlmPopoverContent class="w-[min(100vw-2rem,320px)] p-0">
+                <div class="p-3">
+                  <p class="text-xs font-medium text-foreground mb-2">Date range</p>
+                  <!-- React uses a calendar range picker; until we add a calendar component,
+                       keep styled date inputs but match popover layout/spacing -->
+                  <div class="flex flex-col gap-2">
+                    <input
+                      hlmInput
+                      type="date"
+                      class="h-8 text-sm"
+                      [ngModel]="dateFrom()"
+                      (ngModelChange)="setDateFrom($event)"
+                    />
+                    <input
+                      hlmInput
+                      type="date"
+                      class="h-8 text-sm"
+                      [ngModel]="dateTo()"
+                      (ngModelChange)="setDateTo($event)"
+                    />
+                  </div>
+                </div>
+                <div class="border-t border-border p-2">
                   <button
                     hlmBtn
                     variant="ghost"
                     size="sm"
                     type="button"
-                    class="w-full text-xs"
+                    class="w-full justify-center text-center"
                     (click)="clearDateRange()"
                   >
                     Clear filter
                   </button>
                 </div>
               </div>
-            }
-          </div>
+            </ng-template>
+          </hlm-popover>
 
-          <div class="relative">
+          <hlm-popover
+            #modulePopover="brnPopover"
+            [closeOnOutsidePointerEvents]="true"
+            [sideOffset]="6"
+            align="end"
+          >
             <button
               hlmBtn
+              hlmPopoverTrigger
+              [hlmPopoverTriggerFor]="modulePopover"
               variant="outline"
               size="sm"
               type="button"
               class="h-8 border-dashed w-full sm:w-auto justify-center"
-              (click)="$event.stopPropagation(); modulePanelOpen.update((v) => !v)"
             >
               <ng-icon name="lucidePlusCircle" class="w-4 h-4 mr-1 shrink-0" />
               Module
             </button>
-            @if (modulePanelOpen()) {
-              <div
-                class="absolute right-0 z-50 mt-1 w-[min(100vw-2rem,220px)] max-h-72 overflow-y-auto rounded-lg border border-border bg-popover p-2 shadow-md"
-                (click)="$event.stopPropagation()"
-              >
-                @for (m of moduleFilterOptions; track m.id) {
-                  <button
-                    type="button"
-                    class="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
-                    (click)="$event.stopPropagation(); toggleModule(m.id)"
-                  >
-                    <span
-                      class="flex h-4 w-4 shrink-0 items-center justify-center rounded border border-primary"
-                      [class.bg-primary]="isModuleSelected(m.id)"
-                      [class.text-primary-foreground]="isModuleSelected(m.id)"
-                    >
-                      @if (isModuleSelected(m.id)) {
-                        <ng-icon name="lucideCheck" class="h-3 w-3" />
+            <ng-template hlmPopoverPortal>
+              <div hlmPopoverContent class="w-[min(100vw-2rem,240px)] p-0">
+                <div hlmCommand class="p-0">
+                  <div class="p-2">
+                    <input
+                      hlmInput
+                      brnCommandInput
+                      class="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
+                      placeholder="Enter module name..."
+                      [ngModel]="moduleSearch()"
+                      (ngModelChange)="moduleSearch.set($event)"
+                    />
+                  </div>
+                  <div hlmCommandList class="max-h-72 overflow-y-auto">
+                    <div hlmCommandEmpty>No modules found</div>
+                    <div hlmCommandGroup>
+                      @for (m of filteredModuleOptions(); track m.id) {
+                        <button
+                          type="button"
+                          hlmCommandItem
+                          [value]="m.id"
+                          class="flex w-full items-center gap-2"
+                          (click)="toggleModule(m.id)"
+                        >
+                          <div
+                            class="mr-2 flex h-4 w-4 items-center justify-center rounded-md border border-primary"
+                            [class.bg-primary]="isModuleSelected(m.id)"
+                            [class.text-primary-foreground]="isModuleSelected(m.id)"
+                            [class.opacity-50]="!isModuleSelected(m.id)"
+                          >
+                            @if (isModuleSelected(m.id)) {
+                              <ng-icon name="lucideCheck" class="h-3 w-3" />
+                            }
+                          </div>
+                          <span>{{ m.label }}</span>
+                        </button>
                       }
-                    </span>
-                    {{ m.label }}
-                  </button>
-                }
-                @if (selectedModules().size > 0) {
-                  <button
-                    hlmBtn
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    class="w-full mt-1 text-xs"
-                    (click)="clearModules()"
-                  >
-                    Clear all
-                  </button>
-                }
+                    </div>
+                  </div>
+
+                  @if (selectedModules().size > 0) {
+                    <div class="border-t border-border p-2">
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        class="w-full justify-center text-center"
+                        (click)="clearModules()"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  }
+                </div>
               </div>
-            }
-          </div>
+            </ng-template>
+          </hlm-popover>
         </div>
       </div>
 
@@ -227,8 +293,7 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
   protected readonly dateFrom = signal('');
   protected readonly dateTo = signal('');
   protected readonly selectedModules = signal<ReadonlySet<string>>(new Set());
-  protected readonly datePanelOpen = signal(false);
-  protected readonly modulePanelOpen = signal(false);
+  protected readonly moduleSearch = signal('');
 
   protected readonly baseGroups = signal<ActivityGroup[]>(TIMELINE_ACTIVITIES_DATA);
   private readonly _filtered = signal<ActivityGroup[]>([]);
@@ -258,19 +323,13 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
         this.recompute();
       },
     });
-    document.addEventListener('click', this._closePanels);
   }
 
+  // No manual document click handlers needed; popovers handle outside click.
   ngOnDestroy(): void {
-    document.removeEventListener('click', this._closePanels);
     if (this._searchDebounce) clearTimeout(this._searchDebounce);
     if (this._scrollDebounce) clearTimeout(this._scrollDebounce);
   }
-
-  private readonly _closePanels = (): void => {
-    this.datePanelOpen.set(false);
-    this.modulePanelOpen.set(false);
-  };
 
   labelForGroup(d: string): string {
     return getFormattedDateLabel(d);
@@ -305,7 +364,6 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
   clearDateRange(): void {
     this.dateFrom.set('');
     this.dateTo.set('');
-    this.datePanelOpen.set(false);
     this.visibleCount.set(5);
     this.recompute();
   }
@@ -327,10 +385,16 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
 
   clearModules(): void {
     this.selectedModules.set(new Set());
-    this.modulePanelOpen.set(false);
+    this.moduleSearch.set('');
     this.visibleCount.set(5);
     this.recompute();
   }
+
+  protected readonly filteredModuleOptions = computed(() => {
+    const q = (this.moduleSearch() ?? '').trim().toLowerCase();
+    if (!q) return this.moduleFilterOptions;
+    return this.moduleFilterOptions.filter((m) => String(m.label).toLowerCase().includes(q));
+  });
 
   onScroll(ev: Event): void {
     const container = ev.target as HTMLElement;

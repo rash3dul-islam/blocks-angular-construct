@@ -12,6 +12,7 @@ import {
   HlmSelect,
   HlmSelectContent,
   HlmSelectItem,
+  HlmSelectPortal,
   HlmSelectTrigger,
   HlmSelectValue,
 } from '@spartan-ng/helm/select';
@@ -36,6 +37,7 @@ import { calculateInvoiceTotals } from '../../utils/invoice-utils';
     HlmSelect,
     HlmSelectContent,
     HlmSelectItem,
+    HlmSelectPortal,
     HlmSelectTrigger,
     HlmSelectValue,
   ],
@@ -148,11 +150,13 @@ import { calculateInvoiceTotals } from '../../utils/invoice-utils';
               <hlm-select-trigger class="h-11 w-full">
                 <hlm-select-value placeholder="Select" />
               </hlm-select-trigger>
-              <hlm-select-content>
-                <hlm-select-item value="chf">CHF</hlm-select-item>
-                <hlm-select-item value="usd">USD</hlm-select-item>
-                <hlm-select-item value="eur">EUR</hlm-select-item>
-              </hlm-select-content>
+              <ng-template hlmSelectPortal>
+                <hlm-select-content>
+                  <hlm-select-item value="chf">CHF</hlm-select-item>
+                  <hlm-select-item value="usd">USD</hlm-select-item>
+                  <hlm-select-item value="eur">EUR</hlm-select-item>
+                </hlm-select-content>
+              </ng-template>
             </hlm-select>
           </div>
         </div>
@@ -216,12 +220,14 @@ import { calculateInvoiceTotals } from '../../utils/invoice-utils';
                         <hlm-select-trigger class="h-10 w-full">
                           <hlm-select-value placeholder="Select category" />
                         </hlm-select-trigger>
-                        <hlm-select-content>
-                          <hlm-select-item value="electronics">Electronics</hlm-select-item>
-                          <hlm-select-item value="furniture">Furniture</hlm-select-item>
-                          <hlm-select-item value="accessories">Accessories</hlm-select-item>
-                          <hlm-select-item value="apparel">Apparel</hlm-select-item>
-                        </hlm-select-content>
+                        <ng-template hlmSelectPortal>
+                          <hlm-select-content>
+                            <hlm-select-item value="electronics">Electronics</hlm-select-item>
+                            <hlm-select-item value="furniture">Furniture</hlm-select-item>
+                            <hlm-select-item value="accessories">Accessories</hlm-select-item>
+                            <hlm-select-item value="apparel">Apparel</hlm-select-item>
+                          </hlm-select-content>
+                        </ng-template>
                       </hlm-select>
                     </td>
                     <td class="px-3 py-3">

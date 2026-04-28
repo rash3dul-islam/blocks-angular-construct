@@ -2,30 +2,29 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideSearch } from '@ng-icons/lucide';
 import { BrnCommandInput } from '@spartan-ng/brain/command';
-import { HlmInputGroupImports } from '@spartan-ng/helm/input-group';
 import { classes } from '@spartan-ng/helm/utils';
 
 @Component({
   selector: 'hlm-command-input',
-  imports: [HlmInputGroupImports, NgIcon, BrnCommandInput],
+  // `@spartan-ng/helm/input-group` is not installed in this repo.
+  // Keep the command input standalone and style it directly.
+  imports: [NgIcon, BrnCommandInput],
   providers: [provideIcons({ lucideSearch })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <hlm-input-group
-      class="bg-input/30 border-input/30 h-8 rounded-lg shadow-none *:data-[slot=input-group-addon]:pl-2"
+    <div
+      class="flex h-8 items-center gap-2 rounded-lg border border-input bg-input/30 px-2 shadow-none"
     >
       <input
         brnCommandInput
         data-slot="command-input"
-        class="w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
+        class="w-full bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
         [id]="id()"
         [placeholder]="placeholder()"
       />
 
-      <hlm-input-group-addon>
-        <ng-icon name="lucideSearch" />
-      </hlm-input-group-addon>
-    </hlm-input-group>
+      <ng-icon name="lucideSearch" class="text-muted-foreground" />
+    </div>
   `,
 })
 export class HlmCommandInput {
