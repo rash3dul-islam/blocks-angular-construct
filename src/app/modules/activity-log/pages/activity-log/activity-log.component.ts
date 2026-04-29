@@ -50,7 +50,6 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
     HlmCommand,
     BrnCommandInput,
     HlmCommandList,
-    HlmCommandEmpty,
     HlmCommandGroup,
     HlmCommandItem,
   ],
