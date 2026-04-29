@@ -6,7 +6,14 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideSearch, lucidePlusCircle, lucideCheck, lucideX } from '@ng-icons/lucide';
+import {
+  lucideSearch,
+  lucidePlusCircle,
+  lucideCheck,
+  lucideX,
+  lucideChevronLeft,
+  lucideChevronRight,
+} from '@ng-icons/lucide';
 import { HlmInput } from '@spartan-ng/helm/input';
 import { HlmButton } from '@spartan-ng/helm/button';
 import {
@@ -54,7 +61,16 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
     HlmCommandGroup,
     HlmCommandItem,
   ],
-  viewProviders: [provideIcons({ lucideSearch, lucidePlusCircle, lucideCheck, lucideX })],
+  viewProviders: [
+    provideIcons({
+      lucideSearch,
+      lucidePlusCircle,
+      lucideCheck,
+      lucideX,
+      lucideChevronLeft,
+      lucideChevronRight,
+    }),
+  ],
   template: `
     <div class="flex w-full flex-col p-6">
       <!-- Toolbar (React ActivityLogToolbar) -->
@@ -101,24 +117,53 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
             <ng-template hlmPopoverPortal>
               <div hlmPopoverContent class="w-[min(100vw-2rem,320px)] p-0">
                 <div class="p-3">
-                  <p class="text-xs font-medium text-foreground mb-2">Date range</p>
-                  <!-- React uses a calendar range picker; until we add a calendar component,
-                       keep styled date inputs but match popover layout/spacing -->
-                  <div class="flex flex-col gap-2">
-                    <input
-                      hlmInput
-                      type="date"
-                      class="h-8 text-sm"
-                      [ngModel]="dateFrom()"
-                      (ngModelChange)="setDateFrom($event)"
-                    />
-                    <input
-                      hlmInput
-                      type="date"
-                      class="h-8 text-sm"
-                      [ngModel]="dateTo()"
-                      (ngModelChange)="setDateTo($event)"
-                    />
+                  <div class="mb-3 flex items-center justify-between">
+                    <button
+                      hlmBtn
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      class="h-8 w-8"
+                      (click)="goToPreviousMonth()"
+                    >
+                      <ng-icon name="lucideChevronLeft" class="h-4 w-4" />
+                    </button>
+                    <p class="text-sm font-medium text-foreground">{{ calendarMonthLabel() }}</p>
+                    <button
+                      hlmBtn
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      class="h-8 w-8"
+                      (click)="goToNextMonth()"
+                    >
+                      <ng-icon name="lucideChevronRight" class="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div class="mb-2 grid grid-cols-7 gap-1">
+                    @for (weekday of weekDayLabels; track weekday) {
+                      <div class="py-1 text-center text-xs text-muted-foreground">{{ weekday }}</div>
+                    }
+                  </div>
+
+                  <div class="grid grid-cols-7 gap-1">
+                    @for (day of calendarDays(); track day.iso) {
+                      <button
+                        type="button"
+                        class="h-9 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                        [class.text-muted-foreground]="!day.isCurrentMonth"
+                        [class.font-medium]="day.isCurrentMonth"
+                        [class.bg-muted]="isDateSelected(day.iso)"
+                        [class.text-foreground]="isDateSelected(day.iso)"
+                        [ngClass]="{
+                          'bg-accent/70': isDateInSelectedRange(day.iso) && !isDateSelected(day.iso)
+                        }"
+                        (click)="onCalendarDayClick(day.iso)"
+                      >
+                        {{ day.day }}
+                      </button>
+                    }
                   </div>
                 </div>
                 <div class="border-t border-border p-2">
@@ -287,6 +332,7 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
   private readonly _activityLogService = inject(ActivityLogService);
 
   protected readonly moduleFilterOptions = [...TIMELINE_MODULE_FILTER_IDS];
+  protected readonly weekDayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   protected readonly searchValue = signal('');
   protected readonly searchQuery = signal('');
@@ -294,6 +340,9 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
   protected readonly dateTo = signal('');
   protected readonly selectedModules = signal<ReadonlySet<string>>(new Set());
   protected readonly moduleSearch = signal('');
+  protected readonly currentMonth = signal(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
 
   protected readonly baseGroups = signal<ActivityGroup[]>(TIMELINE_ACTIVITIES_DATA);
   private readonly _filtered = signal<ActivityGroup[]>([]);
@@ -308,6 +357,30 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
     const all = this._filtered();
     const n = Math.min(this.visibleCount(), all.length);
     return all.slice(0, n);
+  });
+
+  readonly calendarMonthLabel = computed(() =>
+    this.currentMonth().toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
+  );
+
+  readonly calendarDays = computed(() => {
+    const monthStart = this.currentMonth();
+    const start = new Date(monthStart);
+    start.setDate(1 - monthStart.getDay());
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+      const normalized = this.toDateOnly(date);
+      return {
+        iso: normalized,
+        day: date.getDate(),
+        isCurrentMonth: date.getMonth() === monthStart.getMonth(),
+      };
+    });
   });
 
   ngOnInit(): void {
@@ -366,6 +439,43 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
     this.dateTo.set('');
     this.visibleCount.set(5);
     this.recompute();
+  }
+
+  goToPreviousMonth(): void {
+    this.currentMonth.update((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  }
+
+  goToNextMonth(): void {
+    this.currentMonth.update((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+  }
+
+  onCalendarDayClick(isoDate: string): void {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+
+    if (!from || (from && to)) {
+      this.setDateFrom(isoDate);
+      this.setDateTo('');
+      return;
+    }
+
+    if (isoDate < from) {
+      this.setDateFrom(isoDate);
+      this.setDateTo('');
+      return;
+    }
+
+    this.setDateTo(isoDate);
+  }
+
+  isDateSelected(isoDate: string): boolean {
+    return this.dateFrom() === isoDate || this.dateTo() === isoDate;
+  }
+
+  isDateInSelectedRange(isoDate: string): boolean {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    return Boolean(from && to && isoDate >= from && isoDate <= to);
   }
 
   isModuleSelected(id: string): boolean {
@@ -461,5 +571,12 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
         trackId: `${g.date}|${gi}|${ii}|${item.time}|${item.description.slice(0, 24)}`,
       })),
     }));
+  }
+
+  private toDateOnly(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }
