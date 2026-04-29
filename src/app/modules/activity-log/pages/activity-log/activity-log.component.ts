@@ -159,17 +159,25 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
               <div hlmPopoverContent class="w-[min(100vw-2rem,240px)] p-0">
                 <div hlmCommand class="p-0">
                   <div class="p-2">
-                    <input
-                      hlmInput
-                      brnCommandInput
-                      class="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
-                      placeholder="Enter module name..."
-                      [ngModel]="moduleSearch()"
-                      (ngModelChange)="moduleSearch.set($event)"
-                    />
+                    <div class="relative">
+                      <ng-icon
+                        name="lucideSearch"
+                        class="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <input
+                        hlmInput
+                        brnCommandInput
+                        class="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-sm"
+                        placeholder="Enter module name..."
+                        [ngModel]="moduleSearch()"
+                        (ngModelChange)="moduleSearch.set($event)"
+                      />
+                    </div>
                   </div>
                   <div hlmCommandList class="max-h-72 overflow-y-auto">
-                    <div hlmCommandEmpty>No modules found</div>
+                    @if (filteredModuleOptions().length === 0) {
+                      <div class="px-2 py-3 text-sm text-muted-foreground">No modules found</div>
+                    }
                     <div hlmCommandGroup>
                       @for (m of filteredModuleOptions(); track m.id) {
                         <button
