@@ -146,40 +146,83 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
               size="sm"
               type="button"
               class="h-9 border-dashed gap-1.5 text-sm"
-              (click)="$event.stopPropagation(); datePanelOpen.update((v) => !v)"
+              (click)="toggleDatePanel($event)"
             >
               <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
               Last Modified
             </button>
             @if (datePanelOpen()) {
               <div
-                class="absolute left-0 z-50 mt-1 flex w-[min(100vw-2rem,260px)] flex-col gap-2 rounded-lg border border-border bg-popover p-3 shadow-md"
+                class="absolute top-full left-0 z-50 mt-2 flex w-[min(100vw-2rem,340px)] flex-col gap-2 rounded-lg border border-border bg-popover p-3 shadow-md sm:left-auto sm:right-0"
                 (click)="$event.stopPropagation()"
               >
-                <input
-                  hlmInput
-                  type="date"
-                  class="h-9 text-sm"
-                  [ngModel]="dateFrom()"
-                  (ngModelChange)="setDateFrom($event)"
-                />
-                <input
-                  hlmInput
-                  type="date"
-                  class="h-9 text-sm"
-                  [ngModel]="dateTo()"
-                  (ngModelChange)="setDateTo($event)"
-                />
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  class="text-xs"
-                  (click)="clearDates()"
-                >
-                  Clear filter
-                </button>
+                <div class="mb-2 flex items-center justify-between">
+                  <h4 class="font-normal text-foreground">Last Modified</h4>
+                  <button
+                    type="button"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                    (click)="datePanelOpen.set(false)"
+                    aria-label="Close date filter"
+                  >
+                    <ng-icon name="lucideX" class="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div class="mb-3 flex items-center justify-between">
+                  <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground hover:bg-muted"
+                    (click)="goToPreviousMonth()"
+                    aria-label="Previous month"
+                  >
+                    <ng-icon name="lucideChevronLeft" class="h-4 w-4" />
+                  </button>
+                  <div class="font-normal text-foreground">{{ calendarMonthLabel() }}</div>
+                  <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border text-foreground hover:bg-muted"
+                    (click)="goToNextMonth()"
+                    aria-label="Next month"
+                  >
+                    <ng-icon name="lucideChevronRight" class="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div class="mb-1 grid grid-cols-7 text-center text-xs text-muted-foreground">
+                  @for (d of weekDayLabels; track d) {
+                    <div class="py-1">{{ d }}</div>
+                  }
+                </div>
+
+                <div class="grid grid-cols-7 gap-1 text-sm">
+                  @for (day of calendarDays(); track day.key) {
+                    <button
+                      type="button"
+                      class="h-10 rounded-md"
+                      [class.text-muted-foreground]="!day.inCurrentMonth"
+                      [class.text-foreground]="day.inCurrentMonth"
+                      [class.bg-muted]="isSelectedDate(day.date)"
+                      [class.font-medium]="isSelectedDate(day.date)"
+                      [class.hover:bg-muted/70]="!isSelectedDate(day.date)"
+                      (click)="selectLastModifiedDate(day.date)"
+                    >
+                      {{ day.date.getDate() }}
+                    </button>
+                  }
+                </div>
+
+                <div class="mt-4 border-t border-border pt-3">
+                  <button
+                    hlmBtn
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    class="h-9 w-full justify-center rounded-md border border-border text-sm"
+                    (click)="clearDates()"
+                  >
+                    Clear filter
+                  </button>
+                </div>
               </div>
             }
           </div>
@@ -698,6 +741,8 @@ export class MyFilesComponent {
   readonly sortDesc = signal(true);
   readonly typePanelOpen = signal(false);
   readonly datePanelOpen = signal(false);
+  readonly weekDayLabels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+  readonly currentMonth = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   readonly addMenuOpen = signal(false);
   readonly rowMenuId = signal<string | null>(null);
   readonly detailsItem = signal<FileItem | null>(null);
@@ -731,6 +776,27 @@ export class MyFilesComponent {
     const v = this.itemKindFilter();
     if (!v) return 'All types';
     return v;
+  });
+
+  readonly calendarMonthLabel = computed(() =>
+    this.currentMonth().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  );
+
+  readonly calendarDays = computed(() => {
+    const month = this.currentMonth();
+    const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+    const gridStart = new Date(firstOfMonth);
+    gridStart.setDate(firstOfMonth.getDate() - firstOfMonth.getDay());
+
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate() + i);
+      return {
+        key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${i}`,
+        date: d,
+        inCurrentMonth: d.getMonth() === month.getMonth() && d.getFullYear() === month.getFullYear(),
+      };
+    });
   });
 
   constructor() {
@@ -858,6 +924,47 @@ export class MyFilesComponent {
   setItemKindFilter(value: FileItemKind | ''): void {
     this.itemKindFilter.set(value);
     this.typePanelOpen.set(false);
+    this.currentPage.set(1);
+    this.load();
+  }
+
+  toggleDatePanel(event: Event): void {
+    event.stopPropagation();
+    const openNext = !this.datePanelOpen();
+    this.datePanelOpen.set(openNext);
+    if (!openNext) return;
+
+    const base = this.dateFrom() ? new Date(this.dateFrom()) : new Date();
+    this.currentMonth.set(new Date(base.getFullYear(), base.getMonth(), 1));
+  }
+
+  goToPreviousMonth(): void {
+    const m = this.currentMonth();
+    this.currentMonth.set(new Date(m.getFullYear(), m.getMonth() - 1, 1));
+  }
+
+  goToNextMonth(): void {
+    const m = this.currentMonth();
+    this.currentMonth.set(new Date(m.getFullYear(), m.getMonth() + 1, 1));
+  }
+
+  isSelectedDate(date: Date): boolean {
+    if (!this.dateFrom()) return false;
+    const selected = new Date(this.dateFrom());
+    return (
+      selected.getFullYear() === date.getFullYear() &&
+      selected.getMonth() === date.getMonth() &&
+      selected.getDate() === date.getDate()
+    );
+  }
+
+  selectLastModifiedDate(date: Date): void {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const iso = `${y}-${m}-${d}`;
+    this.dateFrom.set(iso);
+    this.dateTo.set(iso);
     this.currentPage.set(1);
     this.load();
   }
