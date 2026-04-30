@@ -304,24 +304,37 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- Upload modal (React: file upload modal) -->
       @if (uploadOpen()) {
+        <div
+          class="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px]"
+          (click)="closeUploadModal()"
+          aria-hidden="true"
+        ></div>
         <hlm-dialog state="open" (closed)="closeUploadModal()">
-          <hlm-dialog-content class="sm:max-w-lg" *brnDialogContent="let ctx">
+          <hlm-dialog-content
+            class="w-[min(92vw,680px)] border-border bg-background shadow-2xl p-6 sm:p-7"
+            *brnDialogContent="let ctx"
+          >
             <hlm-dialog-header>
-              <h2 class="text-lg font-semibold">Upload files</h2>
-              <p class="text-sm text-muted-foreground">Select one or more files to upload.</p>
+              <h2 class="text-[20px] font-semibold leading-none tracking-tight">Upload files</h2>
             </hlm-dialog-header>
 
-            <div class="mt-4 space-y-3">
-              <button hlmBtn variant="outline" type="button" class="w-full" (click)="pickFiles()">
-                Choose files
+            <div class="mt-5">
+              <button
+                type="button"
+                class="w-full rounded-md border border-dashed border-muted-foreground/35 bg-transparent px-5 py-12 text-center hover:bg-muted/10"
+                (click)="pickFiles()"
+              >
+                <div class="mx-auto mb-4 inline-flex h-11 w-11 items-center justify-center">
+                  <ng-icon name="lucideUpload" class="h-8 w-8 text-muted-foreground/75" />
+                </div>
+                <p class="text-[16px] font-medium leading-snug text-foreground">
+                  Drag & drop files here, or click to select files
+                </p>
+                <p class="mt-2 text-[13px] text-muted-foreground">PDF, DOCX, JPG, PNG | Max size: 25MB per file</p>
               </button>
 
-              @if (pendingUploads().length === 0) {
-                <div class="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-                  No files selected yet.
-                </div>
-              } @else {
-                <div class="rounded-md border border-border divide-y divide-border">
+              @if (pendingUploads().length > 0) {
+                <div class="mt-3 max-h-40 overflow-auto rounded-md border border-border divide-y divide-border">
                   @for (f of pendingUploads(); track f.name) {
                     <div class="flex items-center justify-between gap-3 p-3 text-sm">
                       <div class="min-w-0">
@@ -344,13 +357,20 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
               }
             </div>
 
-            <hlm-dialog-footer class="mt-6">
-              <button hlmBtn variant="outline" type="button" (click)="closeUploadModal()">
+            <hlm-dialog-footer class="mt-6 gap-3">
+              <button
+                hlmBtn
+                variant="outline"
+                type="button"
+                class="h-10 min-w-[88px] rounded-md px-4 text-sm font-medium"
+                (click)="closeUploadModal()"
+              >
                 Cancel
               </button>
               <button
                 hlmBtn
                 type="button"
+                class="h-10 min-w-[94px] rounded-md bg-teal-400 px-5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                 [disabled]="pendingUploads().length === 0 || uploading()"
                 (click)="confirmUpload()"
               >
@@ -1117,7 +1137,6 @@ export class MyFilesComponent {
   triggerUpload(): void {
     this.addMenuOpen.set(false);
     this.openUploadModal();
-    this.pickFiles();
   }
 
   onFilesPicked(ev: Event): void {
