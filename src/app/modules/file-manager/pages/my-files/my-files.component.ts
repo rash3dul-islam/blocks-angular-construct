@@ -31,6 +31,11 @@ import {
   lucideChevronsRight,
   lucideArrowDownWideNarrow,
   lucideX,
+  lucideCopy,
+  lucideMove,
+  lucidePencil,
+  lucideDownload,
+  lucideUserPlus,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -84,6 +89,11 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       lucideChevronsRight,
       lucideArrowDownWideNarrow,
       lucideX,
+      lucideCopy,
+      lucideMove,
+      lucidePencil,
+      lucideDownload,
+      lucideUserPlus,
     }),
   ],
   template: `
@@ -514,22 +524,65 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
                       </button>
                       @if (rowMenuId() === item.fileId) {
                         <div
-                          class="absolute right-2 top-full z-20 mt-0.5 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md text-left"
+                          class="absolute right-2 top-full z-20 mt-1 min-w-[180px] rounded-md border border-border bg-popover py-1 shadow-md text-left"
                           (click)="$event.stopPropagation()"
                         >
                           <button
                             type="button"
-                            class="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="shareItem(item)"
+                          >
+                            <ng-icon name="lucideUserPlus" class="h-4 w-4 text-muted-foreground" />
+                            Share
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="copyItem(item)"
+                          >
+                            <ng-icon name="lucideCopy" class="h-4 w-4 text-muted-foreground" />
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="moveItem(item)"
+                          >
+                            <ng-icon name="lucideMove" class="h-4 w-4 text-muted-foreground" />
+                            Move
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
                             (click)="renameItem(item)"
                           >
+                            <ng-icon name="lucidePencil" class="h-4 w-4 text-muted-foreground" />
                             Rename
                           </button>
                           <button
                             type="button"
-                            class="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="openDetails(item)"
+                          >
+                            <ng-icon name="lucideInfo" class="h-4 w-4 text-muted-foreground" />
+                            View Details
+                          </button>
+                          <div class="my-1 border-t border-border"></div>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="downloadItem(item)"
+                          >
+                            <ng-icon name="lucideDownload" class="h-4 w-4 text-muted-foreground" />
+                            Download
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
                             (click)="deleteItem(item)"
                           >
-                            Delete
+                            <ng-icon name="lucideTrash2" class="h-4 w-4" />
+                            Remove
                           </button>
                         </div>
                       }
@@ -1112,6 +1165,24 @@ export class MyFilesComponent {
   deleteItem(item: FileItem): void {
     this.rowMenuId.set(null);
     this._fileService.deleteFile(item.fileId).subscribe(() => this.load());
+  }
+
+  shareItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  copyItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  moveItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  downloadItem(item: FileItem): void {
+    this.rowMenuId.set(null);
+    if (!item.downloadUrl) return;
+    window.open(item.downloadUrl, '_blank', 'noopener,noreferrer');
   }
 
   openCreateFolderModal(): void {
