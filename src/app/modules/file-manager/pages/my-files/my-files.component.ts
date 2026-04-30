@@ -314,11 +314,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- Upload modal (React: file upload modal) -->
       @if (uploadOpen()) {
-        <div
-          class="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px]"
-          (click)="closeUploadModal()"
-          aria-hidden="true"
-        ></div>
+        <div class="fixed inset-0 z-40 bg-black/60" (click)="closeUploadModal()" aria-hidden="true"></div>
         <hlm-dialog state="open" (closed)="closeUploadModal()">
           <hlm-dialog-content
             class="w-[min(92vw,680px)] border-border bg-background shadow-2xl p-6 sm:p-7"
@@ -393,6 +389,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- Rename modal (React: RenameFile) -->
       @if (renameOpen() && renamingItem(); as it) {
+        <div class="fixed inset-0 z-40 bg-black/60" (click)="closeRenameModal()" aria-hidden="true"></div>
         <hlm-dialog state="open" (closed)="closeRenameModal()">
           <hlm-dialog-content class="sm:max-w-md" *brnDialogContent="let ctx">
             <hlm-dialog-header>
