@@ -528,7 +528,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
           </div>
 
           <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
+            class="flex flex-col items-end sm:flex-row sm:items-center sm:justify-end gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
           >
             <div class="flex items-center gap-2">
               <span>Rows per page</span>
