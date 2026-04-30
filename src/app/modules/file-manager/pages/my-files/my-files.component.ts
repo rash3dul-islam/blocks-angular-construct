@@ -88,8 +88,69 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
   ],
   template: `
     <div class="p-6 flex flex-col gap-4 min-h-0 text-foreground">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-2xl font-bold tracking-tight">My files</h1>
+        <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
+          <div class="flex rounded-lg border border-border bg-background overflow-hidden">
+            <button
+              hlmBtn
+              variant="ghost"
+              type="button"
+              class="h-9 w-9 rounded-none px-0"
+              [class.bg-muted]="viewMode() === 'list'"
+              (click)="viewMode.set('list')"
+              title="List view"
+            >
+              <ng-icon name="lucideAlignJustify" class="h-3.5 w-3.5" />
+            </button>
+            <button
+              hlmBtn
+              variant="ghost"
+              type="button"
+              class="h-9 w-9 rounded-none border-l border-border px-0"
+              [class.bg-muted]="viewMode() === 'grid'"
+              (click)="viewMode.set('grid')"
+              title="Grid view"
+            >
+              <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div class="relative">
+            <button
+              hlmBtn
+              type="button"
+              class="h-9 gap-1.5 bg-teal-600 text-white hover:bg-teal-700 text-sm font-medium"
+              (click)="$event.stopPropagation(); addMenuOpen.update((v) => !v)"
+            >
+              <ng-icon name="lucidePlusCircle" class="h-4 w-4" />
+              Add new
+            </button>
+            @if (addMenuOpen()) {
+              <div
+                class="absolute right-0 z-50 mt-1 min-w-[220px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                (click)="$event.stopPropagation()"
+              >
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                  (click)="triggerUpload()"
+                >
+                  <ng-icon name="lucideUpload" class="h-4 w-4 shrink-0" />
+                  File/Folder upload
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                  (click)="$event.stopPropagation(); openCreateFolderModal()"
+                >
+                  <ng-icon name="lucideFolderPlus" class="h-4 w-4 shrink-0" />
+                  Create new folder
+                </button>
+              </div>
+            }
+          </div>
+        </div>
       </div>
 
       <!-- Toolbar (React BaseHeaderToolbar) -->
@@ -223,68 +284,6 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
                     Clear filter
                   </button>
                 </div>
-              </div>
-            }
-          </div>
-
-          <div class="flex-1 min-w-[8px] lg:flex-none"></div>
-
-          <div class="flex rounded-lg border border-border bg-background overflow-hidden">
-            <button
-              hlmBtn
-              variant="ghost"
-              type="button"
-              class="h-9 w-9 rounded-none px-0"
-              [class.bg-muted]="viewMode() === 'list'"
-              (click)="viewMode.set('list')"
-              title="List view"
-            >
-              <ng-icon name="lucideAlignJustify" class="h-3.5 w-3.5" />
-            </button>
-            <button
-              hlmBtn
-              variant="ghost"
-              type="button"
-              class="h-9 w-9 rounded-none border-l border-border px-0"
-              [class.bg-muted]="viewMode() === 'grid'"
-              (click)="viewMode.set('grid')"
-              title="Grid view"
-            >
-              <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div class="relative">
-            <button
-              hlmBtn
-              type="button"
-              class="h-9 gap-1.5 bg-teal-600 text-white hover:bg-teal-700 text-sm font-medium"
-              (click)="$event.stopPropagation(); addMenuOpen.update((v) => !v)"
-            >
-              <ng-icon name="lucidePlusCircle" class="h-4 w-4" />
-              Add new
-            </button>
-            @if (addMenuOpen()) {
-              <div
-                class="absolute right-0 z-50 mt-1 min-w-[220px] rounded-lg border border-border bg-popover py-1 shadow-md"
-                (click)="$event.stopPropagation()"
-              >
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                  (click)="triggerUpload()"
-                >
-                  <ng-icon name="lucideUpload" class="h-4 w-4 shrink-0" />
-                  File/Folder upload
-                </button>
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                  (click)="$event.stopPropagation(); openCreateFolderModal()"
-                >
-                  <ng-icon name="lucideFolderPlus" class="h-4 w-4 shrink-0" />
-                  Create new folder
-                </button>
               </div>
             }
           </div>
