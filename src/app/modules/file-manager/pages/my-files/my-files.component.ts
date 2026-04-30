@@ -593,30 +593,68 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       }
 
       @if (viewMode() === 'grid') {
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
-          @for (item of files(); track item.fileId) {
-            <button
-              type="button"
-              (dblclick)="openItem(item)"
-              class="group relative rounded-xl border border-border bg-card p-4 flex flex-col items-center gap-2 text-left hover:border-teal-500/50 hover:shadow-md transition-all"
-            >
-              <div
-                class="w-14 h-14 flex items-center justify-center rounded-lg"
-                [class]="iconBgFor(item)"
-              >
-                <ng-icon
-                  [name]="iconFor(item)"
-                  class="h-7 w-7"
-                  [class]="iconColorFor(item)"
-                ></ng-icon>
-              </div>
-              <span class="text-xs font-medium text-center truncate w-full">{{ item.name }}</span>
-              @if (item.isShared) {
-                <ng-icon name="lucideUsers" class="h-3 w-3 text-muted-foreground" />
+        <div class="space-y-6">
+          <section class="space-y-3">
+            <h3 class="text-sm font-medium text-foreground">Folder ({{ folderItems().length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              @for (item of folderItems(); track item.fileId) {
+                <button
+                  type="button"
+                  (dblclick)="openItem(item)"
+                  class="group relative h-14 rounded-lg border border-border bg-card px-4 flex items-center gap-3 text-left hover:border-teal-500/50 hover:shadow-sm transition-all"
+                >
+                  <div
+                    class="h-8 w-8 shrink-0 flex items-center justify-center rounded-md"
+                    [class]="iconBgFor(item)"
+                  >
+                    <ng-icon [name]="iconFor(item)" class="h-4 w-4" [class]="iconColorFor(item)"></ng-icon>
+                  </div>
+                  <span class="flex-1 min-w-0 truncate text-sm font-medium">{{ item.name }}</span>
+                  <span class="inline-flex h-7 w-7 items-center justify-center text-muted-foreground">
+                    <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                  </span>
+                </button>
+              } @empty {
+                <div
+                  class="col-span-full rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground"
+                >
+                  No folders available.
+                </div>
               }
-              <span class="text-xs text-muted-foreground">{{ displaySize(item) }}</span>
-            </button>
-          }
+            </div>
+          </section>
+
+          <section class="space-y-3">
+            <h3 class="text-sm font-medium text-foreground">File ({{ fileItems().length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              @for (item of fileItems(); track item.fileId) {
+                <button
+                  type="button"
+                  (dblclick)="openItem(item)"
+                  class="group relative min-h-[120px] rounded-lg border border-border bg-card p-4 flex flex-col items-center justify-center gap-2 text-center hover:border-teal-500/50 hover:shadow-sm transition-all"
+                >
+                  <div
+                    class="h-14 w-14 shrink-0 flex items-center justify-center rounded-lg"
+                    [class]="iconBgFor(item)"
+                  >
+                    <ng-icon [name]="iconFor(item)" class="h-7 w-7" [class]="iconColorFor(item)"></ng-icon>
+                  </div>
+                  <span class="w-full truncate text-sm font-medium leading-tight">{{ item.name }}</span>
+                  <div class="absolute right-3 bottom-2 flex items-center">
+                    <span class="inline-flex h-7 w-7 items-center justify-center text-muted-foreground">
+                      <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                    </span>
+                  </div>
+                </button>
+              } @empty {
+                <div
+                  class="col-span-full rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground"
+                >
+                  No files available.
+                </div>
+              }
+            </div>
+          </section>
         </div>
       }
 
@@ -770,6 +808,8 @@ export class MyFilesComponent {
   readonly totalPages = computed(() =>
     Math.max(1, Math.ceil(this.totalCount() / this.pageSize()) || 1)
   );
+  readonly folderItems = computed(() => this.files().filter((item) => item.itemKind === 'Folder'));
+  readonly fileItems = computed(() => this.files().filter((item) => item.itemKind !== 'Folder'));
 
   readonly typeFilterLabel = computed(() => {
     const v = this.itemKindFilter();
