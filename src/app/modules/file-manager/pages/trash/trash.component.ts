@@ -180,15 +180,15 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               variant="outline"
               size="sm"
               type="button"
-              class="h-9 gap-1.5 border border-slate-200 bg-background text-sm shadow-sm dark:border-border"
+              class="h-9 gap-1.5 border border-slate-200 bg-background text-sm font-medium text-foreground shadow-sm dark:border-border"
               (click)="toggleDatePanel($event)"
             >
-              <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
-              Trashed Date
+              <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 text-slate-600 dark:text-muted-foreground" />
+              <span>Trashed Date</span>
               @if (datePanelOpen()) {
-                <ng-icon name="lucideChevronUp" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+                <ng-icon name="lucideChevronUp" class="h-3.5 w-3.5 shrink-0 text-slate-600 dark:text-muted-foreground" />
               } @else {
-                <ng-icon name="lucideChevronDown" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+                <ng-icon name="lucideChevronDown" class="h-3.5 w-3.5 shrink-0 text-slate-600 dark:text-muted-foreground" />
               }
             </button>
             @if (datePanelOpen()) {
@@ -201,7 +201,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 <div
                   class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-border"
                 >
-                  <span class="text-base font-normal leading-none text-slate-900 dark:text-foreground">Trashed Date</span>
+                  <span class="text-base font-medium leading-none text-slate-900 dark:text-foreground">Trashed Date</span>
                   <button
                     type="button"
                     class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
@@ -222,7 +222,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                   >
                     <ng-icon name="lucideChevronLeft" class="h-4 w-4 text-muted-foreground" />
                   </button>
-                  <span class="min-w-0 flex-1 text-center text-base font-normal text-slate-900 dark:text-foreground">
+                  <span class="min-w-0 flex-1 text-center text-base font-medium text-slate-900 dark:text-foreground">
                     {{ calendarMonthTitle() }}
                   </span>
                   <button
@@ -237,7 +237,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 </div>
                 <div class="px-4 pb-1 pt-0">
                   <div
-                    class="grid grid-cols-7 gap-y-1 text-center text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-muted-foreground"
+                    class="grid grid-cols-7 gap-y-1 text-center text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500"
                   >
                     <span class="py-1.5">Su</span>
                     <span class="py-1.5">Mo</span>
@@ -247,18 +247,32 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     <span class="py-1.5">Fr</span>
                     <span class="py-1.5">Sa</span>
                   </div>
-                  <div class="grid grid-cols-7 gap-y-1.5 pb-1 pt-0.5 text-center text-sm">
+                  <div class="grid grid-cols-7 gap-x-0 gap-y-1 pb-1 pt-0.5 text-center text-sm">
                     @for (cell of calendarCells(); track cell.key) {
                       <button
                         type="button"
-                        class="relative mx-auto flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:hover:bg-muted/60"
+                        class="relative flex h-9 min-w-0 items-center justify-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                        [class.w-full]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.w-9]="!calendarDayInRange(cell.iso) || calendarDayIsEndpoint(cell.iso)"
+                        [class.mx-auto]="!calendarDayInRange(cell.iso) || calendarDayIsEndpoint(cell.iso)"
+                        [class.rounded-md]="!calendarDayInRange(cell.iso) || calendarDayIsEndpoint(cell.iso)"
+                        [class.rounded-none]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
                         [class.text-slate-400]="cell.outside && !calendarDayInRange(cell.iso)"
-                        [class.text-foreground]="!cell.outside || calendarDayInRange(cell.iso)"
-                        [class.bg-slate-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.dark:bg-muted/60]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.bg-slate-200]="calendarDayIsEndpoint(cell.iso)"
+                        [class.text-slate-900]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.text-white]="calendarDayIsEndpoint(cell.iso)"
                         [class.font-semibold]="calendarDayIsEndpoint(cell.iso)"
-                        [class.dark:bg-muted]="calendarDayIsEndpoint(cell.iso)"
+                        [class.text-foreground]="!cell.outside && !calendarDayInRange(cell.iso)"
+                        [class.bg-slate-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:bg-slate-800/50]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.bg-teal-600]="calendarDayIsEndpoint(cell.iso)"
+                        [class.shadow-sm]="calendarDayIsEndpoint(cell.iso)"
+                        [class.hover:bg-teal-700]="calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:bg-teal-600]="calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:hover:bg-teal-500]="calendarDayIsEndpoint(cell.iso)"
+                        [class.hover:bg-slate-200]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:hover:bg-slate-700/60]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.hover:bg-slate-100]="!cell.outside && !calendarDayInRange(cell.iso)"
+                        [class.dark:hover:bg-muted/60]="!cell.outside && !calendarDayInRange(cell.iso)"
                         (click)="selectCalendarDay(cell.date, $event)"
                       >
                         {{ cell.dayOfMonth }}
@@ -296,12 +310,12 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             @if (dateFrom() || dateTo()) {
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                class="inline-flex max-w-[min(100%,420px)] items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-left text-xs font-semibold text-slate-900 shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:text-slate-950 dark:hover:bg-[hsl(202,68%,60%)]"
                 (click)="clearDatesOnly()"
                 aria-label="Remove date filter"
               >
-                {{ dateFilterChipLabel() }}
-                <ng-icon name="lucideX" class="h-3.5 w-3.5 shrink-0 opacity-90" />
+                <span class="min-w-0 truncate">{{ dateFilterChipLabel() }}</span>
+                <ng-icon name="lucideX" class="h-3.5 w-3.5 shrink-0 text-slate-900 dark:text-slate-950" />
               </button>
             }
             @if (searchQuery().trim()) {
@@ -720,17 +734,18 @@ export class TrashComponent implements OnInit {
     return this.typeOptions.find((o) => o.value === v)?.label ?? v;
   });
 
+  /** Active filter chip: `Trashed Date: 5/3/2026 - 5/16/2026` (no leading zeros). */
   readonly dateFilterChipLabel = computed(() => {
     const from = this.dateFrom();
     const to = this.dateTo();
-    const fmt = (s: string) => format(parseISO(`${s}T12:00:00`), 'MMM d, yyyy');
+    const fmt = (s: string) => format(parseISO(`${s}T12:00:00`), 'M/d/yyyy');
     if (from && to) {
       const lo = from < to ? from : to;
       const hi = from < to ? to : from;
-      return `${fmt(lo)} – ${fmt(hi)}`;
+      return `Trashed Date: ${fmt(lo)} - ${fmt(hi)}`;
     }
-    if (from) return fmt(from);
-    if (to) return fmt(to);
+    if (from) return `Trashed Date: ${fmt(from)}`;
+    if (to) return `Trashed Date: ${fmt(to)}`;
     return '';
   });
 
