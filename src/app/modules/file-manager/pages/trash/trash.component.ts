@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideTrash2,
+  lucideTrash,
   lucideRefreshCw,
   lucideFolder,
   lucideFile,
@@ -54,6 +55,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
   viewProviders: [
     provideIcons({
       lucideTrash2,
+      lucideTrash,
       lucideRefreshCw,
       lucideFolder,
       lucideFile,
@@ -111,10 +113,15 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="outline"
               type="button"
-              class="h-9 gap-1.5 bg-background text-sm font-medium shadow-sm"
+              class="h-9 gap-2 border-rose-100 bg-background pr-3 text-sm font-medium text-foreground shadow-sm hover:bg-rose-50/60 dark:border-rose-900/35 dark:hover:bg-rose-950/25"
               (click)="clearTrash()"
             >
-              <ng-icon name="lucideTrash2" class="h-4 w-4" />
+              <span
+                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-rose-200/90 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40"
+                aria-hidden="true"
+              >
+                <ng-icon name="lucideTrash" class="h-4 w-4 text-slate-700 dark:text-slate-200" />
+              </span>
               Clear trash
             </button>
           }
