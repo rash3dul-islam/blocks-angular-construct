@@ -1,6 +1,6 @@
 // ─── Trash Component ──────────────────────────────────────────────────────────
-// Mirrors: react_Constract/src/modules/file-manager/pages/trash/trash.tsx
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+// UI aligned with product trash screen (list/grid, filters, sortable table, pagination).
+import { Component, OnInit, inject, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -11,14 +11,41 @@ import {
   lucideFile,
   lucideFileText,
   lucideImage,
-  lucideAlertTriangle,
   lucideLayoutGrid,
   lucideAlignJustify,
+  lucideSearch,
+  lucidePlusCircle,
+  lucideChevronRight,
+  lucideShare2,
+  lucideInfo,
+  lucideMoreVertical,
+  lucideChevronLeft,
+  lucideChevronsLeft,
+  lucideChevronsRight,
+  lucideChevronUp,
+  lucideChevronDown,
+  lucideX,
+  lucideVideo,
+  lucideMusic,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameMonth,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from 'date-fns';
 import { FileManagerService } from '../../services/file-manager.service';
-import { FileItem, FileViewMode } from '../../../../models/file-manager.model';
+import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-manager.model';
+
+type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
 
 @Component({
   selector: 'app-trash',
@@ -32,35 +59,30 @@ import { FileItem, FileViewMode } from '../../../../models/file-manager.model';
       lucideFile,
       lucideFileText,
       lucideImage,
-      lucideAlertTriangle,
       lucideLayoutGrid,
       lucideAlignJustify,
+      lucideSearch,
+      lucidePlusCircle,
+      lucideChevronRight,
+      lucideShare2,
+      lucideInfo,
+      lucideMoreVertical,
+      lucideChevronLeft,
+      lucideChevronsLeft,
+      lucideChevronsRight,
+      lucideChevronUp,
+      lucideChevronDown,
+      lucideX,
+      lucideVideo,
+      lucideMusic,
     }),
   ],
   template: `
-    <div class="p-6 flex flex-col gap-4 min-h-0 text-foreground">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight">Trash</h1>
-          <p class="text-sm text-muted-foreground mt-1">
-            Items in trash will be permanently deleted after 30 days.
-          </p>
-        </div>
-      </div>
-
-      <!-- Toolbar (React TrashHeaderToolbar - simplified) -->
-      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
-        <div class="relative w-full lg:flex-1 lg:max-w-md min-w-0">
-          <input
-            hlmInput
-            [(ngModel)]="searchQuery"
-            placeholder="Search trash..."
-            class="h-9 w-full rounded-lg text-sm"
-          />
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="flex rounded-lg border border-border bg-background overflow-hidden">
+    <div class="p-6 flex flex-col gap-4 min-h-0 min-h-full text-foreground bg-[#F8F9FB]">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Trash</h1>
+        <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
+          <div class="flex rounded-lg border border-border bg-background overflow-hidden shadow-sm">
             <button
               hlmBtn
               variant="ghost"
@@ -84,124 +106,366 @@ import { FileItem, FileViewMode } from '../../../../models/file-manager.model';
               <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
             </button>
           </div>
+          @if (files().length > 0) {
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="h-9 gap-1.5 bg-background text-sm font-medium shadow-sm"
+              (click)="clearTrash()"
+            >
+              <ng-icon name="lucideTrash2" class="h-4 w-4" />
+              Clear trash
+            </button>
+          }
+        </div>
+      </div>
 
-          @if (selectedIds().size > 0) {
+      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
+        <div class="relative w-full lg:flex-1 lg:max-w-md min-w-0">
+          <ng-icon
+            name="lucideSearch"
+            class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            hlmInput
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search by file or folder name"
+            class="h-9 w-full rounded-lg border-border bg-background pl-9 text-sm shadow-sm"
+          />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative">
             <button
               hlmBtn
               variant="outline"
               size="sm"
               type="button"
-              class="h-9"
-              (click)="restoreSelected()"
+              class="h-9 border-dashed gap-1.5 bg-background text-sm shadow-sm"
+              (click)="$event.stopPropagation(); typePanelOpen.update((v) => !v)"
             >
-              Restore selected ({{ selectedIds().size }})
+              <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+              {{ typeFilterLabel() }}
+              <ng-icon name="lucideChevronRight" class="h-3 w-3 shrink-0 -rotate-90 opacity-60" />
             </button>
-          }
+            @if (typePanelOpen()) {
+              <div
+                class="absolute left-0 z-50 mt-1 min-w-[180px] rounded-lg border border-border bg-popover p-1 shadow-md"
+                (click)="$event.stopPropagation()"
+              >
+                @for (opt of typeOptions; track opt.value) {
+                  <button
+                    type="button"
+                    class="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
+                    (click)="setItemKindFilter(opt.value)"
+                  >
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
 
-          @if (files().length > 0) {
+          <div class="relative">
             <button
               hlmBtn
-              variant="destructive"
+              variant="outline"
               size="sm"
               type="button"
-              class="h-9"
-              (click)="emptyTrash()"
+              class="h-9 gap-1.5 border border-slate-200 bg-background text-sm shadow-sm dark:border-border"
+              (click)="toggleDatePanel($event)"
             >
-              Empty Trash
+              <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+              Trashed Date
+              @if (datePanelOpen()) {
+                <ng-icon name="lucideChevronUp" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+              } @else {
+                <ng-icon name="lucideChevronDown" class="h-3.5 w-3.5 shrink-0 opacity-70" />
+              }
             </button>
-          }
+            @if (datePanelOpen()) {
+              <div
+                class="absolute left-0 z-50 mt-1.5 w-[min(100vw-2rem,320px)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-border dark:bg-card dark:shadow-xl"
+                (click)="$event.stopPropagation()"
+                role="dialog"
+                aria-label="Trashed date range"
+              >
+                <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2.5 dark:border-border">
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                    (click)="prevCalendarMonth($event)"
+                    title="Previous month"
+                    aria-label="Previous month"
+                  >
+                    <ng-icon name="lucideChevronLeft" class="h-4 w-4" />
+                  </button>
+                  <span class="min-w-0 flex-1 text-center text-sm font-semibold text-foreground">
+                    {{ calendarMonthTitle() }}
+                  </span>
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                    (click)="nextCalendarMonth($event)"
+                    title="Next month"
+                    aria-label="Next month"
+                  >
+                    <ng-icon name="lucideChevronRight" class="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                    (click)="closeDatePanel($event)"
+                    title="Close"
+                    aria-label="Close calendar"
+                  >
+                    <ng-icon name="lucideX" class="h-4 w-4" />
+                  </button>
+                </div>
+                <div class="px-3 pt-2 pb-1">
+                  <div class="grid grid-cols-7 gap-y-0.5 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    <span class="py-1">Su</span>
+                    <span class="py-1">Mo</span>
+                    <span class="py-1">Tu</span>
+                    <span class="py-1">We</span>
+                    <span class="py-1">Th</span>
+                    <span class="py-1">Fr</span>
+                    <span class="py-1">Sa</span>
+                  </div>
+                  <div class="grid grid-cols-7 gap-y-1 pb-2 pt-0.5 text-center text-sm">
+                    @for (cell of calendarCells(); track cell.key) {
+                      <button
+                        type="button"
+                        class="relative mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                        [class.text-muted-foreground]="cell.outside"
+                        [class.opacity-45]="cell.outside"
+                        [class.bg-teal-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.text-teal-900]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:bg-teal-950/50]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:text-teal-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.bg-teal-600]="calendarDayIsEndpoint(cell.iso)"
+                        [class.text-white]="calendarDayIsEndpoint(cell.iso)"
+                        [class.shadow-sm]="calendarDayIsEndpoint(cell.iso)"
+                        (click)="selectCalendarDay(cell.date, $event)"
+                      >
+                        {{ cell.dayOfMonth }}
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div class="flex justify-center border-t border-slate-100 px-3 py-2.5 dark:border-border">
+                  <button
+                    hlmBtn
+                    variant="ghost"
+                    size="sm"
+                    type="button"
+                    class="text-sm text-muted-foreground hover:text-foreground"
+                    (click)="clearDates()"
+                  >
+                    Clear filter
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
-      </div>
-
-      <!-- ── Warning Banner ─────────────────────────────────────── -->
-      <div
-        class="flex items-start gap-3 p-4 rounded-lg bg-amber-50/70 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
-      >
-        <ng-icon
-          name="lucideAlertTriangle"
-          size="18"
-          class="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
-        ></ng-icon>
-        <p class="text-sm text-amber-700 dark:text-amber-300">
-          Files in trash are still taking up storage space. Permanently delete them to free up
-          space.
-        </p>
       </div>
 
       @if (filteredFiles().length === 0) {
-        <div class="flex flex-col items-center justify-center h-full min-h-[320px] p-12 text-center">
+        <div
+          class="flex flex-col items-center justify-center rounded-xl border border-border bg-card shadow-sm min-h-[320px] p-12 text-center"
+        >
           <div class="text-6xl mb-6">🗑️</div>
           <h3 class="text-xl font-medium text-foreground mb-2">Trash is empty</h3>
-          <p class="text-muted-foreground max-w-sm">
-            All items have been permanently deleted
-          </p>
+          <p class="text-muted-foreground max-w-sm">Deleted items will appear here.</p>
         </div>
       } @else {
         @if (viewMode() === 'list') {
-          <div class="rounded-lg border border-border bg-card shadow-sm overflow-hidden flex flex-col min-h-[320px]">
+          <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col min-h-[280px]">
             <div class="overflow-x-auto">
-              <table class="w-full text-sm min-w-[640px]">
-                <thead class="bg-muted/40 border-b border-border">
+              <table class="w-full text-sm min-w-[720px]">
+                <thead class="bg-background border-b border-border">
                   <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($event)" />
+                    <th class="px-6 py-3.5 text-left align-middle">
+                      <div class="inline-flex items-center gap-2.5 select-none">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Name</span>
+                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('name', 'asc')"
+                            [class.dark:text-teal-400]="sortArrowActive('name', 'asc')"
+                            (click)="setSort('name', 'asc', $event)"
+                            title="Sort by name, A–Z"
+                          >
+                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('name', 'desc')"
+                            [class.dark:text-teal-400]="sortArrowActive('name', 'desc')"
+                            (click)="setSort('name', 'desc', $event)"
+                            title="Sort by name, Z–A"
+                          >
+                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Name
+                    <th class="px-6 py-3.5 text-center align-middle">
+                      <div class="inline-flex items-center justify-center gap-2.5 select-none">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Deleted date</span>
+                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('deleted', 'asc')"
+                            [class.dark:text-teal-400]="sortArrowActive('deleted', 'asc')"
+                            (click)="setSort('deleted', 'asc', $event)"
+                            title="Oldest deleted first"
+                          >
+                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('deleted', 'desc')"
+                            [class.dark:text-teal-400]="sortArrowActive('deleted', 'desc')"
+                            (click)="setSort('deleted', 'desc', $event)"
+                            title="Newest deleted first"
+                          >
+                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Type
+                    <th class="px-6 py-3.5 text-center align-middle">
+                      <div class="inline-flex items-center justify-center gap-2.5 select-none">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">File Type</span>
+                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('type', 'asc')"
+                            [class.dark:text-teal-400]="sortArrowActive('type', 'asc')"
+                            (click)="setSort('type', 'asc', $event)"
+                            title="Sort by type, A–Z"
+                          >
+                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('type', 'desc')"
+                            [class.dark:text-teal-400]="sortArrowActive('type', 'desc')"
+                            (click)="setSort('type', 'desc', $event)"
+                            title="Sort by type, Z–A"
+                          >
+                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Deleted
+                    <th class="px-6 py-3.5 text-right align-middle">
+                      <div class="inline-flex items-center justify-end gap-2.5 select-none">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Size</span>
+                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('size', 'asc')"
+                            [class.dark:text-teal-400]="sortArrowActive('size', 'asc')"
+                            (click)="setSort('size', 'asc', $event)"
+                            title="Smallest first"
+                          >
+                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                            [class.text-teal-600]="sortArrowActive('size', 'desc')"
+                            [class.dark:text-teal-400]="sortArrowActive('size', 'desc')"
+                            (click)="setSort('size', 'desc', $event)"
+                            title="Largest first"
+                          >
+                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </th>
-                    <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Actions
+                    <th class="w-14 px-4 py-3.5 text-center align-middle">
+                      <span class="inline-flex w-full items-center justify-center">
+                        <ng-icon name="lucideInfo" class="h-5 w-5 text-teal-600 dark:text-teal-500" />
+                      </span>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (item of filteredFiles(); track item.fileId) {
-                    <tr class="hover:bg-muted/30 transition-colors">
-                      <td class="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          [checked]="isSelected(item.fileId)"
-                          (change)="toggleSelected(item.fileId, $event)"
-                        />
-                      </td>
-                      <td class="px-4 py-3">
+                  @for (item of paginatedFiles(); track item.fileId) {
+                    <tr class="border-t border-border hover:bg-muted/25 transition-colors">
+                      <td class="px-6 py-3">
                         <div class="flex items-center gap-3 min-w-0">
-                          <ng-icon [name]="getFileIcon(item)" class="h-4 w-4 text-muted-foreground"></ng-icon>
-                          <span class="font-medium text-muted-foreground line-through truncate">{{ item.name }}</span>
+                          <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                            [class]="iconBgFor(item)"
+                          >
+                            <ng-icon
+                              [name]="iconFor(item)"
+                              class="h-4 w-4"
+                              [class]="iconColorFor(item)"
+                            ></ng-icon>
+                          </div>
+                          <span class="font-medium truncate text-foreground">{{ item.name }}</span>
+                          @if (item.isShared) {
+                            <ng-icon
+                              name="lucideShare2"
+                              class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                              title="Shared"
+                            />
+                          }
                         </div>
                       </td>
-                      <td class="px-4 py-3 text-muted-foreground capitalize">{{ item.itemKind }}</td>
-                      <td class="px-4 py-3 text-muted-foreground text-xs">
-                        {{ item.updatedAt ?? item.createdAt | date: 'mediumDate' }}
+                      <td class="px-6 py-3 text-center text-xs text-muted-foreground whitespace-nowrap">
+                        {{ trashedAt(item) | date: 'MM/dd/yyyy' }}
                       </td>
-                      <td class="px-4 py-3">
-                        <div class="flex items-center justify-end gap-2">
+                      <td class="px-6 py-3 text-center text-muted-foreground capitalize">{{ item.itemKind }}</td>
+                      <td class="px-6 py-3 text-right text-muted-foreground tabular-nums">{{ displaySize(item) }}</td>
+                      <td class="px-2 py-3 text-center align-middle">
+                        <div class="relative inline-flex items-center justify-center">
                           <button
-                            hlmBtn
-                            variant="ghost"
-                            size="sm"
-                            class="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400"
-                            (click)="restoreFile(item)"
+                            type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                            (click)="toggleRowMenu($event, item.fileId)"
+                            aria-label="Row actions"
                           >
-                            <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5"></ng-icon>
-                            Restore
+                            <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
                           </button>
-                          <button
-                            hlmBtn
-                            variant="ghost"
-                            size="sm"
-                            class="flex items-center gap-1 text-xs text-destructive"
-                            (click)="permanentDelete(item)"
-                          >
-                            <ng-icon name="lucideTrash2" class="h-3.5 w-3.5"></ng-icon>
-                            Delete
-                          </button>
+                          @if (openRowMenuId() === item.fileId) {
+                            <div
+                              class="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                              (click)="$event.stopPropagation()"
+                            >
+                              <button
+                                type="button"
+                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                                (click)="restoreFile(item)"
+                              >
+                                <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
+                                Restore
+                              </button>
+                              <button
+                                type="button"
+                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+                                (click)="permanentDelete(item)"
+                              >
+                                <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
+                                Delete permanently
+                              </button>
+                            </div>
+                          }
                         </div>
                       </td>
                     </tr>
@@ -209,161 +473,492 @@ import { FileItem, FileViewMode } from '../../../../models/file-manager.model';
                 </tbody>
               </table>
             </div>
+            <ng-container *ngTemplateOutlet="paginationTpl" />
           </div>
         }
 
         @if (viewMode() === 'grid') {
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
-            @for (item of filteredFiles(); track item.fileId) {
-              <div class="group relative rounded-xl border border-border bg-card p-4 flex flex-col gap-2">
-                <div class="flex items-start justify-between gap-2">
-                  <input
-                    type="checkbox"
-                    [checked]="isSelected(item.fileId)"
-                    (change)="toggleSelected(item.fileId, $event)"
-                  />
-                  <div class="flex items-center gap-1">
-                    <button
-                      hlmBtn
-                      variant="ghost"
-                      size="sm"
-                      class="h-8 px-2 text-xs text-emerald-600 dark:text-emerald-400"
-                      (click)="restoreFile(item)"
+          <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
+              @for (item of paginatedFiles(); track item.fileId) {
+                <div class="group relative rounded-xl border border-border bg-background p-4 flex flex-col gap-2 shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+                      [class]="iconBgFor(item)"
                     >
-                      Restore
-                    </button>
+                      <ng-icon [name]="iconFor(item)" class="h-5 w-5" [class]="iconColorFor(item)"></ng-icon>
+                    </div>
                     <button
-                      hlmBtn
-                      variant="ghost"
-                      size="sm"
-                      class="h-8 px-2 text-xs text-destructive"
-                      (click)="permanentDelete(item)"
+                      type="button"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                      (click)="toggleRowMenu($event, item.fileId)"
+                      aria-label="Row actions"
                     >
-                      Delete
+                      <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
                     </button>
+                    @if (openRowMenuId() === item.fileId) {
+                      <div
+                        class="absolute right-3 top-11 z-50 min-w-[160px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                        (click)="$event.stopPropagation()"
+                      >
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                          (click)="restoreFile(item)"
+                        >
+                          <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
+                          Restore
+                        </button>
+                        <button
+                          type="button"
+                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+                          (click)="permanentDelete(item)"
+                        >
+                          <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
+                          Delete permanently
+                        </button>
+                      </div>
+                    }
+                  </div>
+                  <div class="min-w-0 pt-1">
+                    <div class="flex items-center gap-1 min-w-0">
+                      <span class="text-xs font-medium truncate text-foreground">{{ item.name }}</span>
+                      @if (item.isShared) {
+                        <ng-icon name="lucideShare2" class="h-3 w-3 shrink-0 text-muted-foreground" />
+                      }
+                    </div>
+                    <div class="text-[11px] text-muted-foreground mt-1">
+                      {{ trashedAt(item) | date: 'MM/dd/yyyy' }} · {{ item.itemKind }} · {{ displaySize(item) }}
+                    </div>
                   </div>
                 </div>
-                <div class="flex items-center justify-center pt-2">
-                  <ng-icon [name]="getFileIcon(item)" class="h-10 w-10 text-muted-foreground"></ng-icon>
-                </div>
-                <div class="min-w-0">
-                  <div class="text-xs font-medium text-muted-foreground line-through truncate">{{ item.name }}</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5">
-                    Deleted {{ item.updatedAt ?? item.createdAt | date: 'mediumDate' }}
-                  </div>
-                </div>
-              </div>
-            }
+              }
+            </div>
+            <ng-container *ngTemplateOutlet="paginationTpl" />
           </div>
         }
       }
+
+      <ng-template #paginationTpl>
+        <div
+          class="flex flex-col items-end sm:flex-row sm:items-center sm:justify-end gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
+        >
+          <div class="flex items-center gap-2">
+            <span>Rows per page</span>
+            <select
+              class="h-8 rounded-md border border-input bg-background px-2 text-sm"
+              [ngModel]="pageSize()"
+              (ngModelChange)="setPageSize($event)"
+            >
+              @for (n of pageSizeOptions; track n) {
+                <option [ngValue]="n">{{ n }}</option>
+              }
+            </select>
+          </div>
+          <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+          <div class="flex items-center gap-1">
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              class="h-8 w-8 p-0"
+              [disabled]="currentPage() <= 1"
+              (click)="goFirst()"
+              title="First page"
+            >
+              <ng-icon name="lucideChevronsLeft" class="h-4 w-4" />
+            </button>
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              class="h-8 w-8 p-0"
+              [disabled]="currentPage() <= 1"
+              (click)="goPrev()"
+              title="Previous"
+            >
+              <ng-icon name="lucideChevronLeft" class="h-4 w-4" />
+            </button>
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              class="h-8 w-8 p-0"
+              [disabled]="currentPage() >= totalPages()"
+              (click)="goNext()"
+              title="Next"
+            >
+              <ng-icon name="lucideChevronRight" class="h-4 w-4" />
+            </button>
+            <button
+              hlmBtn
+              variant="outline"
+              size="sm"
+              class="h-8 w-8 p-0"
+              [disabled]="currentPage() >= totalPages()"
+              (click)="goLast()"
+              title="Last page"
+            >
+              <ng-icon name="lucideChevronsRight" class="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </ng-template>
     </div>
   `,
 })
 export class TrashComponent implements OnInit {
   private readonly fileService = inject(FileManagerService);
+  private readonly destroyRef = inject(DestroyRef);
 
-  // ── Signals ────────────────────────────────────────────────────────────────
   readonly files = signal<FileItem[]>([]);
   readonly viewMode = signal<FileViewMode>('list');
-  readonly selectedIds = signal<ReadonlySet<string>>(new Set());
-  searchQuery = '';
+  readonly searchQuery = signal('');
+  readonly itemKindFilter = signal<FileItemKind | ''>('');
+  readonly dateFrom = signal('');
+  readonly dateTo = signal('');
+  /** Month shown in the Trashed Date calendar popover. */
+  readonly calendarViewMonth = signal<Date>(new Date());
+  readonly typePanelOpen = signal(false);
+  readonly datePanelOpen = signal(false);
+  readonly openRowMenuId = signal<string | null>(null);
+  readonly currentPage = signal(1);
+  readonly pageSize = signal(10);
+  readonly pageSizeOptions = [10, 25, 50];
+  readonly sortKey = signal<TrashSortKey>('deleted');
+  readonly sortDir = signal<'asc' | 'desc'>('desc');
+
+  readonly typeOptions: { value: FileItemKind | ''; label: string }[] = [
+    { value: '', label: 'All types' },
+    { value: 'Folder', label: 'Folder' },
+    { value: 'File', label: 'File' },
+    { value: 'Image', label: 'Image' },
+    { value: 'Audio', label: 'Audio' },
+    { value: 'Video', label: 'Video' },
+  ];
+
+  private readonly _closePanels = (): void => {
+    this.typePanelOpen.set(false);
+    this.datePanelOpen.set(false);
+    this.openRowMenuId.set(null);
+  };
+
+  readonly typeFilterLabel = computed(() => (this.itemKindFilter() ? this.itemKindFilter() : 'All types'));
+
+  readonly calendarCells = computed(() => {
+    const cursor = this.calendarViewMonth();
+    const monthStart = startOfMonth(cursor);
+    const monthEnd = endOfMonth(cursor);
+    const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+    const gridEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    return eachDayOfInterval({ start: gridStart, end: gridEnd }).map((date) => ({
+      date,
+      key: format(date, 'yyyy-MM-dd'),
+      iso: format(date, 'yyyy-MM-dd'),
+      outside: !isSameMonth(date, cursor),
+      dayOfMonth: format(date, 'd'),
+    }));
+  });
 
   readonly filteredFiles = computed(() => {
-    const q = this.searchQuery.toLowerCase();
-    if (!q) return this.files();
-    return this.files().filter((f) => f.name.toLowerCase().includes(q));
+    const q = this.searchQuery().toLowerCase();
+    const kind = this.itemKindFilter();
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    let out = this.files();
+    if (q) out = out.filter((f) => f.name.toLowerCase().includes(q));
+    if (kind) out = out.filter((f) => f.itemKind === kind);
+    if (from || to) {
+      out = out.filter((f) => {
+        const t = this.trashedAtMs(f);
+        if (from) {
+          const fromMs = new Date(from + 'T00:00:00').getTime();
+          if (t < fromMs) return false;
+        }
+        if (to) {
+          const toMs = new Date(to + 'T23:59:59.999').getTime();
+          if (t > toMs) return false;
+        }
+        return true;
+      });
+    }
+    return out;
   });
 
-  readonly allSelected = computed(() => {
-    const ids = this.selectedIds();
-    const list = this.filteredFiles();
-    return list.length > 0 && list.every((x) => ids.has(x.fileId));
+  readonly sortedFiles = computed(() => {
+    const list = [...this.filteredFiles()];
+    const key = this.sortKey();
+    const dir = this.sortDir();
+    const mul = dir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (key) {
+        case 'name':
+          cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+          break;
+        case 'deleted':
+          cmp = this.trashedAtMs(a) - this.trashedAtMs(b);
+          break;
+        case 'type':
+          cmp = a.itemKind.localeCompare(b.itemKind);
+          break;
+        case 'size':
+          cmp = this.sizeBytes(a) - this.sizeBytes(b);
+          break;
+      }
+      return cmp * mul;
+    });
+    return list;
   });
 
-  // ── Lifecycle ──────────────────────────────────────────────────────────────
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.sortedFiles().length / this.pageSize()) || 1)
+  );
+
+  readonly paginatedFiles = computed(() => {
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return this.sortedFiles().slice(start, start + size);
+  });
+
   ngOnInit(): void {
-    this.fileService.getFiles({ pageNo: 1, pageSize: 50 }).subscribe((res) => {
-      // Simulate deleted files by marking them
-      const deletedItems = res.items.map((f) => ({ ...f, isDeleted: true })).slice(0, 3);
-      this.files.set(deletedItems);
+    document.addEventListener('click', this._closePanels);
+    this.destroyRef.onDestroy(() => document.removeEventListener('click', this._closePanels));
+
+    this.fileService.getFiles({ pageNo: 1, pageSize: 100 }).subscribe((res) => {
+      const demo = res.items.slice(0, 18).map((f) => ({ ...f, isDeleted: true }));
+      this.files.set(demo);
     });
   }
 
-  // ── Actions ────────────────────────────────────────────────────────────────
+  sortArrowActive(key: TrashSortKey, dir: 'asc' | 'desc'): boolean {
+    return this.sortKey() === key && this.sortDir() === dir;
+  }
+
+  setSort(key: TrashSortKey, dir: 'asc' | 'desc', ev?: Event): void {
+    ev?.stopPropagation();
+    this.sortKey.set(key);
+    this.sortDir.set(dir);
+    this.currentPage.set(1);
+  }
+
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.currentPage.set(1);
+  }
+
+  setItemKindFilter(v: FileItemKind | ''): void {
+    this.itemKindFilter.set(v);
+    this.typePanelOpen.set(false);
+    this.currentPage.set(1);
+  }
+
+  setDateFrom(v: string): void {
+    this.dateFrom.set(v);
+    this.currentPage.set(1);
+  }
+
+  setDateTo(v: string): void {
+    this.dateTo.set(v);
+    this.currentPage.set(1);
+  }
+
+  calendarMonthTitle(): string {
+    return format(this.calendarViewMonth(), 'MMMM yyyy');
+  }
+
+  toggleDatePanel(ev: Event): void {
+    ev.stopPropagation();
+    const open = !this.datePanelOpen();
+    if (open) {
+      const from = this.dateFrom();
+      try {
+        if (from) {
+          this.calendarViewMonth.set(parseISO(`${from}T12:00:00`));
+        } else {
+          this.calendarViewMonth.set(new Date());
+        }
+      } catch {
+        this.calendarViewMonth.set(new Date());
+      }
+    }
+    this.datePanelOpen.set(open);
+  }
+
+  closeDatePanel(ev: Event): void {
+    ev.stopPropagation();
+    this.datePanelOpen.set(false);
+  }
+
+  prevCalendarMonth(ev: Event): void {
+    ev.stopPropagation();
+    this.calendarViewMonth.update((d) => subMonths(d, 1));
+  }
+
+  nextCalendarMonth(ev: Event): void {
+    ev.stopPropagation();
+    this.calendarViewMonth.update((d) => addMonths(d, 1));
+  }
+
+  selectCalendarDay(date: Date, ev: Event): void {
+    ev.stopPropagation();
+    const iso = format(date, 'yyyy-MM-dd');
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (!from || (from && to)) {
+      this.setDateFrom(iso);
+      this.setDateTo('');
+    } else if (iso < from) {
+      this.setDateFrom(iso);
+      this.setDateTo('');
+    } else {
+      this.setDateTo(iso);
+    }
+  }
+
+  calendarDayInRange(iso: string): boolean {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (!from) return false;
+    if (!to) return iso === from;
+    const lo = from < to ? from : to;
+    const hi = from < to ? to : from;
+    return iso >= lo && iso <= hi;
+  }
+
+  calendarDayIsEndpoint(iso: string): boolean {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    return (!!from && iso === from) || (!!to && iso === to);
+  }
+
+  clearDates(): void {
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.datePanelOpen.set(false);
+    this.currentPage.set(1);
+  }
+
+  setPageSize(value: number): void {
+    this.pageSize.set(Number(value));
+    this.currentPage.set(1);
+  }
+
+  goFirst(): void {
+    this.currentPage.set(1);
+  }
+
+  goPrev(): void {
+    this.currentPage.update((p) => Math.max(1, p - 1));
+  }
+
+  goNext(): void {
+    this.currentPage.update((p) => Math.min(this.totalPages(), p + 1));
+  }
+
+  goLast(): void {
+    this.currentPage.set(this.totalPages());
+  }
+
+  toggleRowMenu(ev: Event, id: string): void {
+    ev.stopPropagation();
+    this.openRowMenuId.update((cur) => (cur === id ? null : id));
+  }
+
+  trashedAt(item: FileItem): string {
+    return item.updatedAt ?? item.lastModifiedAt ?? item.createdAt;
+  }
+
+  private trashedAtMs(item: FileItem): number {
+    return new Date(this.trashedAt(item)).getTime();
+  }
+
+  private sizeBytes(item: FileItem): number {
+    return item.size ?? 0;
+  }
+
   restoreFile(item: FileItem): void {
+    this.openRowMenuId.set(null);
     this.fileService.restoreFile(item.fileId).subscribe(() => {
       this.files.update((list) => list.filter((f) => f.fileId !== item.fileId));
-      this.selectedIds.update((s) => {
-        const next = new Set(s);
-        next.delete(item.fileId);
-        return next;
-      });
     });
   }
 
   permanentDelete(item: FileItem): void {
+    this.openRowMenuId.set(null);
     this.fileService.deleteFile(item.fileId).subscribe(() => {
       this.files.update((list) => list.filter((f) => f.fileId !== item.fileId));
-      this.selectedIds.update((s) => {
-        const next = new Set(s);
-        next.delete(item.fileId);
-        return next;
-      });
     });
   }
 
-  emptyTrash(): void {
+  clearTrash(): void {
     const confirmed = confirm('Permanently delete all items in trash? This cannot be undone.');
     if (!confirmed) return;
     const ids = this.files().map((f) => f.fileId);
     ids.forEach((id) => this.fileService.deleteFile(id).subscribe());
     this.files.set([]);
-    this.selectedIds.set(new Set());
+    this.openRowMenuId.set(null);
+    this.currentPage.set(1);
   }
 
-  restoreSelected(): void {
-    const selected = Array.from(this.selectedIds());
-    selected.forEach((id) => this.fileService.restoreFile(id).subscribe());
-    this.files.update((list) => list.filter((f) => !this.selectedIds().has(f.fileId)));
-    this.selectedIds.set(new Set());
-  }
-
-  isSelected(id: string): boolean {
-    return this.selectedIds().has(id);
-  }
-
-  toggleSelected(id: string, ev: Event): void {
-    const checked = (ev.target as HTMLInputElement).checked;
-    this.selectedIds.update((s) => {
-      const next = new Set(s);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  }
-
-  toggleAll(ev: Event): void {
-    const checked = (ev.target as HTMLInputElement).checked;
-    if (!checked) {
-      this.selectedIds.set(new Set());
-      return;
+  iconFor(item: FileItem): string {
+    switch (item.itemKind) {
+      case 'Folder':
+        return 'lucideFolder';
+      case 'Image':
+        return 'lucideImage';
+      case 'Audio':
+        return 'lucideMusic';
+      case 'Video':
+        return 'lucideVideo';
+      case 'File':
+      default:
+        return item.mimeType?.includes('pdf') || item.name.toLowerCase().endsWith('.pdf')
+          ? 'lucideFileText'
+          : 'lucideFile';
     }
-    const next = new Set<string>();
-    this.filteredFiles().forEach((f) => next.add(f.fileId));
-    this.selectedIds.set(next);
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  getFileIcon(item: FileItem): string {
-    if (item.type === 'folder') return 'lucideFolder';
-    const mime = item.mimeType ?? '';
-    if (mime.startsWith('image/')) return 'lucideImage';
-    if (mime.includes('pdf') || mime.includes('text')) return 'lucideFileText';
-    return 'lucideFile';
+  iconColorFor(item: FileItem): string {
+    switch (item.itemKind) {
+      case 'Folder':
+        return 'text-amber-500';
+      case 'Image':
+        return 'text-rose-500';
+      case 'Audio':
+        return 'text-violet-500';
+      case 'Video':
+        return 'text-sky-600';
+      case 'File':
+      default:
+        return 'text-teal-600';
+    }
   }
 
-  getIconColor(_item: FileItem): string {
-    return 'text-muted-foreground';
+  iconBgFor(item: FileItem): string {
+    switch (item.itemKind) {
+      case 'Folder':
+        return 'bg-amber-50 dark:bg-amber-950/40';
+      case 'Image':
+        return 'bg-rose-50 dark:bg-rose-950/30';
+      case 'Audio':
+        return 'bg-violet-50 dark:bg-violet-950/30';
+      case 'Video':
+        return 'bg-sky-50 dark:bg-sky-950/30';
+      default:
+        return 'bg-teal-50 dark:bg-teal-950/30';
+    }
+  }
+
+  displaySize(item: FileItem): string {
+    return item.sizeLabel ?? (item.size ? this.formatBytes(item.size) : '—');
+  }
+
+  formatBytes(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   }
 }
