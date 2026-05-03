@@ -89,7 +89,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="ghost"
               type="button"
-              class="h-9 w-9 rounded-none px-0"
+              class="h-10 w-10 cursor-pointer rounded-none px-0"
               [class.bg-muted]="viewMode() === 'list'"
               (click)="viewMode.set('list')"
               title="List view"
@@ -100,7 +100,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="ghost"
               type="button"
-              class="h-9 w-9 rounded-none border-l border-border px-0"
+              class="h-10 w-10 cursor-pointer rounded-none border-l border-border px-0"
               [class.bg-muted]="viewMode() === 'grid'"
               (click)="viewMode.set('grid')"
               title="Grid view"
@@ -111,7 +111,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
           @if (files().length > 0) {
             <button
               type="button"
-              class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
+              class="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
               (click)="clearTrash()"
             >
               <ng-icon
@@ -149,7 +149,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               variant="outline"
               size="sm"
               type="button"
-              class="h-9 border-dashed gap-1.5 bg-background text-sm shadow-sm"
+              class="h-9 cursor-pointer gap-1.5 border-dashed bg-background text-sm shadow-sm"
               (click)="$event.stopPropagation(); typePanelOpen.update((v) => !v)"
             >
               <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
@@ -164,7 +164,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 @for (opt of typeOptions; track opt.value) {
                   <button
                     type="button"
-                    class="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
+                    class="block w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
                     (click)="setItemKindFilter(opt.value)"
                   >
                     {{ opt.label }}
@@ -180,7 +180,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               variant="outline"
               size="sm"
               type="button"
-              class="h-9 gap-1.5 border border-slate-200 bg-background text-sm font-medium text-foreground shadow-sm dark:border-border"
+              class="h-9 cursor-pointer gap-1.5 border border-slate-200 bg-background text-sm font-medium text-foreground shadow-sm dark:border-border"
               (click)="toggleDatePanel($event)"
             >
               <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 text-slate-600 dark:text-muted-foreground" />
@@ -204,7 +204,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                   <span class="text-base font-medium leading-none text-slate-900 dark:text-foreground">Trashed Date</span>
                   <button
                     type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
+                    class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
                     (click)="closeDatePanel($event)"
                     title="Close"
                     aria-label="Close calendar"
@@ -215,7 +215,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 <div class="flex items-center gap-2 px-4 pb-3 pt-1">
                   <button
                     type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
+                    class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
                     (click)="prevCalendarMonth($event)"
                     title="Previous month"
                     aria-label="Previous month"
@@ -227,7 +227,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                   </span>
                   <button
                     type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
+                    class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
                     (click)="nextCalendarMonth($event)"
                     title="Next month"
                     aria-label="Next month"
@@ -251,7 +251,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     @for (cell of calendarCells(); track cell.key) {
                       <button
                         type="button"
-                        class="relative flex h-9 min-w-0 items-center justify-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                        class="relative flex h-9 min-w-0 cursor-pointer items-center justify-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
                         [class.w-full]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
                         [class.w-9]="!calendarDayInRange(cell.iso) || calendarDayIsEndpoint(cell.iso)"
                         [class.mx-auto]="!calendarDayInRange(cell.iso) || calendarDayIsEndpoint(cell.iso)"
@@ -299,7 +299,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             @if (itemKindFilter()) {
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
                 (click)="clearTypeFilter()"
                 aria-label="Remove type filter"
               >
@@ -310,7 +310,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             @if (dateFrom() || dateTo()) {
               <button
                 type="button"
-                class="inline-flex max-w-[min(100%,420px)] items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-left text-xs font-semibold text-slate-900 shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:text-slate-950 dark:hover:bg-[hsl(202,68%,60%)]"
+                class="inline-flex max-w-[min(100%,420px)] cursor-pointer items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-left text-xs font-semibold text-slate-900 shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:text-slate-950 dark:hover:bg-[hsl(202,68%,60%)]"
                 (click)="clearDatesOnly()"
                 aria-label="Remove date filter"
               >
@@ -321,7 +321,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             @if (searchQuery().trim()) {
               <button
                 type="button"
-                class="inline-flex max-w-[min(100%,280px)] items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                class="inline-flex max-w-[min(100%,280px)] cursor-pointer items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
                 (click)="clearSearchFilter()"
                 aria-label="Clear search"
               >
@@ -331,7 +331,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             }
             <button
               type="button"
-              class="inline-flex items-center gap-1 text-sm font-semibold text-foreground/85 hover:text-foreground"
+              class="inline-flex cursor-pointer items-center gap-1 text-sm font-semibold text-foreground/85 hover:text-foreground"
               (click)="resetAllFilters()"
             >
               Reset
@@ -353,129 +353,160 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
         @if (viewMode() === 'list') {
           <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col min-h-[280px]">
             <div class="overflow-x-auto">
-              <table class="w-full text-sm min-w-[720px]">
+              <table class="w-full table-fixed min-w-[720px] text-sm">
+                <colgroup>
+                  <col class="min-w-0 w-[48%]" />
+                  <col class="w-[8.25rem]" />
+                  <col class="w-[6.75rem]" />
+                  <col class="w-[5.5rem]" />
+                  <col class="w-14" />
+                </colgroup>
                 <thead class="bg-background border-b border-border">
                   <tr>
-                    <th class="px-6 py-3.5 text-left align-middle">
-                      <div class="inline-flex items-center gap-2.5 select-none">
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Name</span>
-                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    <th
+                      class="min-w-0 px-6 py-3.5 text-left align-middle"
+                      [attr.aria-sort]="sortKey() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                    >
+                      <button
+                        type="button"
+                        class="inline-flex min-w-0 max-w-full cursor-pointer select-none flex-nowrap items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-left transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                        (click)="cycleSortColumn('name', $event)"
+                        title="Sort by name (click to toggle A–Z / Z–A)"
+                      >
+                        <span class="min-w-0 truncate text-sm font-medium text-slate-600 dark:text-slate-400">Name</span>
+                        <span
+                          class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                          aria-hidden="true"
+                        >
+                          <ng-icon
+                            name="lucideChevronUp"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('name', 'asc')"
                             [class.dark:text-teal-400]="sortArrowActive('name', 'asc')"
-                            (click)="setSort('name', 'asc', $event)"
-                            title="Sort by name, A–Z"
-                          >
-                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          />
+                          <ng-icon
+                            name="lucideChevronDown"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('name', 'desc')"
                             [class.dark:text-teal-400]="sortArrowActive('name', 'desc')"
-                            (click)="setSort('name', 'desc', $event)"
-                            title="Sort by name, Z–A"
-                          >
-                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
+                          />
+                        </span>
+                      </button>
                     </th>
-                    <th class="px-6 py-3.5 text-center align-middle">
-                      <div class="inline-flex items-center justify-center gap-2.5 select-none">
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Deleted date</span>
-                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    <th
+                      class="py-3.5 pl-4 pr-3 text-center align-middle"
+                      [attr.aria-sort]="sortKey() === 'deleted' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                    >
+                      <button
+                        type="button"
+                        class="mx-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-2 pr-1 transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                        (click)="cycleSortColumn('deleted', $event)"
+                        title="Sort by deleted date (click to toggle oldest / newest first)"
+                      >
+                        <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">Deleted date</span>
+                        <span
+                          class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                          aria-hidden="true"
+                        >
+                          <ng-icon
+                            name="lucideChevronUp"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('deleted', 'asc')"
                             [class.dark:text-teal-400]="sortArrowActive('deleted', 'asc')"
-                            (click)="setSort('deleted', 'asc', $event)"
-                            title="Oldest deleted first"
-                          >
-                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          />
+                          <ng-icon
+                            name="lucideChevronDown"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('deleted', 'desc')"
                             [class.dark:text-teal-400]="sortArrowActive('deleted', 'desc')"
-                            (click)="setSort('deleted', 'desc', $event)"
-                            title="Newest deleted first"
-                          >
-                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
+                          />
+                        </span>
+                      </button>
                     </th>
-                    <th class="px-6 py-3.5 text-center align-middle">
-                      <div class="inline-flex items-center justify-center gap-2.5 select-none">
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">File Type</span>
-                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    <th
+                      class="py-3.5 pl-4 pr-3 text-center align-middle"
+                      [attr.aria-sort]="sortKey() === 'type' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                    >
+                      <button
+                        type="button"
+                        class="mx-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-2 pr-1 transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                        (click)="cycleSortColumn('type', $event)"
+                        title="Sort by file type (click to toggle A–Z / Z–A)"
+                      >
+                        <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">File Type</span>
+                        <span
+                          class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                          aria-hidden="true"
+                        >
+                          <ng-icon
+                            name="lucideChevronUp"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('type', 'asc')"
                             [class.dark:text-teal-400]="sortArrowActive('type', 'asc')"
-                            (click)="setSort('type', 'asc', $event)"
-                            title="Sort by type, A–Z"
-                          >
-                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          />
+                          <ng-icon
+                            name="lucideChevronDown"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('type', 'desc')"
                             [class.dark:text-teal-400]="sortArrowActive('type', 'desc')"
-                            (click)="setSort('type', 'desc', $event)"
-                            title="Sort by type, Z–A"
-                          >
-                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
+                          />
+                        </span>
+                      </button>
                     </th>
-                    <th class="px-6 py-3.5 text-right align-middle">
-                      <div class="inline-flex items-center justify-end gap-2.5 select-none">
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Size</span>
-                        <div class="-my-0.5 inline-flex flex-col items-center justify-center gap-0" (click)="$event.stopPropagation()">
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    <th
+                      class="py-3.5 pl-3 pr-4 text-right align-middle"
+                      [attr.aria-sort]="sortKey() === 'size' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                    >
+                      <button
+                        type="button"
+                        class="ml-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-end gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-1 pr-2 text-right transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                        (click)="cycleSortColumn('size', $event)"
+                        title="Sort by size (click to toggle smallest / largest first)"
+                      >
+                        <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">Size</span>
+                        <span
+                          class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                          aria-hidden="true"
+                        >
+                          <ng-icon
+                            name="lucideChevronUp"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('size', 'asc')"
                             [class.dark:text-teal-400]="sortArrowActive('size', 'asc')"
-                            (click)="setSort('size', 'asc', $event)"
-                            title="Smallest first"
-                          >
-                            <ng-icon name="lucideChevronUp" class="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            class="flex h-[14px] w-7 shrink-0 items-center justify-center rounded-sm text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                          />
+                          <ng-icon
+                            name="lucideChevronDown"
+                            class="h-3 w-3"
                             [class.text-teal-600]="sortArrowActive('size', 'desc')"
                             [class.dark:text-teal-400]="sortArrowActive('size', 'desc')"
-                            (click)="setSort('size', 'desc', $event)"
-                            title="Largest first"
-                          >
-                            <ng-icon name="lucideChevronDown" class="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
+                          />
+                        </span>
+                      </button>
                     </th>
-                    <th class="w-14 px-4 py-3.5 text-center align-middle">
-                      <span class="inline-flex w-full items-center justify-center">
-                        <ng-icon name="lucideInfo" class="h-5 w-5 text-teal-600 dark:text-teal-500" />
-                      </span>
+                    <th class="w-14 px-2 py-3.5 text-center align-middle">
+                      <div class="flex w-full items-center justify-center">
+                        <button
+                          type="button"
+                          class="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-slate-900 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:text-slate-100 dark:hover:bg-slate-800/80 dark:focus-visible:ring-slate-600"
+                          title="Row menu: restore items to their original location, or delete them permanently. Items stay in trash until you remove them."
+                          aria-label="About trash row actions"
+                        >
+                          <ng-icon
+                            name="lucideInfo"
+                            class="h-5 w-5 shrink-0"
+                            style="--ng-icon__stroke-width: 1.5px"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (item of paginatedFiles(); track item.fileId) {
                     <tr class="border-t border-border hover:bg-muted/25 transition-colors">
-                      <td class="px-6 py-3">
-                        <div class="flex items-center gap-3 min-w-0">
+                      <td class="min-w-0 px-6 py-3">
+                        <div class="flex min-w-0 items-center gap-3">
                           <div
                             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                             [class]="iconBgFor(item)"
@@ -496,16 +527,20 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                           }
                         </div>
                       </td>
-                      <td class="px-6 py-3 text-center text-xs text-muted-foreground whitespace-nowrap">
+                      <td class="py-3 pl-4 pr-3 text-center text-xs text-muted-foreground whitespace-nowrap align-middle">
                         {{ trashedAt(item) | date: 'MM/dd/yyyy' }}
                       </td>
-                      <td class="px-6 py-3 text-center text-muted-foreground capitalize">{{ item.itemKind }}</td>
-                      <td class="px-6 py-3 text-right text-muted-foreground tabular-nums">{{ displaySize(item) }}</td>
+                      <td class="py-3 pl-4 pr-3 text-center whitespace-nowrap capitalize text-muted-foreground align-middle">
+                        {{ item.itemKind }}
+                      </td>
+                      <td class="py-3 pl-3 pr-4 text-right whitespace-nowrap align-middle tabular-nums text-muted-foreground">
+                        {{ displaySize(item) }}
+                      </td>
                       <td class="px-2 py-3 text-center align-middle">
                         <div class="relative inline-flex items-center justify-center">
                           <button
                             type="button"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                            class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
                             (click)="toggleRowMenu($event, item.fileId)"
                             aria-label="Row actions"
                           >
@@ -518,7 +553,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                             >
                               <button
                                 type="button"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                                class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
                                 (click)="restoreFile(item)"
                               >
                                 <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
@@ -526,7 +561,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                               </button>
                               <button
                                 type="button"
-                                class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+                                class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
                                 (click)="permanentDelete(item)"
                               >
                                 <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
@@ -559,7 +594,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     </div>
                     <button
                       type="button"
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                      class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
                       (click)="toggleRowMenu($event, item.fileId)"
                       aria-label="Row actions"
                     >
@@ -572,7 +607,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                       >
                         <button
                           type="button"
-                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
                           (click)="restoreFile(item)"
                         >
                           <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
@@ -580,7 +615,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                         </button>
                         <button
                           type="button"
-                          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+                          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
                           (click)="permanentDelete(item)"
                         >
                           <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
@@ -615,7 +650,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
           <div class="flex items-center gap-2">
             <span>Rows per page</span>
             <select
-              class="h-8 rounded-md border border-input bg-background px-2 text-sm"
+              class="h-8 cursor-pointer rounded-md border border-input bg-background px-2 text-sm"
               [ngModel]="pageSize()"
               (ngModelChange)="setPageSize($event)"
             >
@@ -630,7 +665,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="outline"
               size="sm"
-              class="h-8 w-8 p-0"
+              class="h-8 w-8 cursor-pointer p-0 disabled:cursor-not-allowed"
               [disabled]="currentPage() <= 1"
               (click)="goFirst()"
               title="First page"
@@ -641,7 +676,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="outline"
               size="sm"
-              class="h-8 w-8 p-0"
+              class="h-8 w-8 cursor-pointer p-0 disabled:cursor-not-allowed"
               [disabled]="currentPage() <= 1"
               (click)="goPrev()"
               title="Previous"
@@ -652,7 +687,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="outline"
               size="sm"
-              class="h-8 w-8 p-0"
+              class="h-8 w-8 cursor-pointer p-0 disabled:cursor-not-allowed"
               [disabled]="currentPage() >= totalPages()"
               (click)="goNext()"
               title="Next"
@@ -663,7 +698,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               hlmBtn
               variant="outline"
               size="sm"
-              class="h-8 w-8 p-0"
+              class="h-8 w-8 cursor-pointer p-0 disabled:cursor-not-allowed"
               [disabled]="currentPage() >= totalPages()"
               (click)="goLast()"
               title="Last page"
@@ -845,6 +880,15 @@ export class TrashComponent implements OnInit {
     this.sortKey.set(key);
     this.sortDir.set(dir);
     this.currentPage.set(1);
+  }
+
+  /** One control for label + chevrons: new column → asc; same column → toggle asc/desc. */
+  cycleSortColumn(key: TrashSortKey, ev?: Event): void {
+    if (this.sortKey() !== key) {
+      this.setSort(key, 'asc', ev);
+      return;
+    }
+    this.setSort(key, this.sortDir() === 'asc' ? 'desc' : 'asc', ev);
   }
 
   onSearchChange(value: string): void {
