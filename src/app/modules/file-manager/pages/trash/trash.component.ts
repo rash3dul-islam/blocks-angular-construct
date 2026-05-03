@@ -6,8 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideTrash2,
-  lucideTrash,
   lucideRefreshCw,
+  lucideRecycle,
   lucideFolder,
   lucideFile,
   lucideFileText,
@@ -55,8 +55,8 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
   viewProviders: [
     provideIcons({
       lucideTrash2,
-      lucideTrash,
       lucideRefreshCw,
+      lucideRecycle,
       lucideFolder,
       lucideFile,
       lucideFileText,
@@ -110,19 +110,17 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
           </div>
           @if (files().length > 0) {
             <button
-              hlmBtn
-              variant="outline"
               type="button"
-              class="h-9 gap-2 border-rose-100 bg-background pr-3 text-sm font-medium text-foreground shadow-sm hover:bg-rose-50/60 dark:border-rose-900/35 dark:hover:bg-rose-950/25"
+              class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
               (click)="clearTrash()"
             >
-              <span
-                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-rose-200/90 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40"
+              <ng-icon
+                name="lucideRecycle"
+                class="h-[1.125rem] w-[1.125rem] shrink-0 text-slate-900 dark:text-foreground"
+                style="--ng-icon__stroke-width: 1.5px"
                 aria-hidden="true"
-              >
-                <ng-icon name="lucideTrash" class="h-4 w-4 text-slate-700 dark:text-slate-200" />
-              </span>
-              Clear trash
+              />
+              <span class="font-bold tracking-tight">Clear trash</span>
             </button>
           }
         </div>
