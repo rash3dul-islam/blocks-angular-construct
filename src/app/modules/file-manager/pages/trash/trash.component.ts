@@ -128,7 +128,8 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
         </div>
       </div>
 
-      <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
         <div class="relative w-full lg:flex-1 lg:max-w-md min-w-0">
           <ng-icon
             name="lucideSearch"
@@ -154,7 +155,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               (click)="$event.stopPropagation(); typePanelOpen.update((v) => !v)"
             >
               <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
-              {{ typeFilterLabel() }}
+              {{ typeFilterButtonLabel() }}
               <ng-icon name="lucideChevronRight" class="h-3 w-3 shrink-0 -rotate-90 opacity-60" />
             </button>
             @if (typePanelOpen()) {
@@ -278,6 +279,52 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             }
           </div>
         </div>
+        </div>
+        @if (hasActiveFilters()) {
+          <div class="flex flex-wrap items-center gap-3 border-t border-slate-200/80 pt-2.5 dark:border-border lg:border-t-0 lg:pt-0">
+            @if (itemKindFilter()) {
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                (click)="clearTypeFilter()"
+                aria-label="Remove type filter"
+              >
+                {{ typeFilterChipLabel() }}
+                <ng-icon name="lucideX" class="h-3.5 w-3.5 shrink-0 opacity-90" />
+              </button>
+            }
+            @if (dateFrom() || dateTo()) {
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                (click)="clearDatesOnly()"
+                aria-label="Remove date filter"
+              >
+                {{ dateFilterChipLabel() }}
+                <ng-icon name="lucideX" class="h-3.5 w-3.5 shrink-0 opacity-90" />
+              </button>
+            }
+            @if (searchQuery().trim()) {
+              <button
+                type="button"
+                class="inline-flex max-w-[min(100%,280px)] items-center gap-1.5 rounded-full bg-[hsl(202,68%,53%)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[hsl(202,68%,45%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:bg-[hsl(202,68%,53%)] dark:hover:bg-[hsl(202,68%,60%)]"
+                (click)="clearSearchFilter()"
+                aria-label="Clear search"
+              >
+                <span class="truncate">"{{ searchQuery() }}"</span>
+                <ng-icon name="lucideX" class="h-3.5 w-3.5 shrink-0 opacity-90" />
+              </button>
+            }
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 text-sm font-semibold text-foreground/85 hover:text-foreground"
+              (click)="resetAllFilters()"
+            >
+              Reset
+              <ng-icon name="lucideX" class="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </div>
+        }
       </div>
 
       @if (filteredFiles().length === 0) {
@@ -651,7 +698,41 @@ export class TrashComponent implements OnInit {
     this.openRowMenuId.set(null);
   };
 
-  readonly typeFilterLabel = computed(() => (this.itemKindFilter() ? this.itemKindFilter() : 'All types'));
+  readonly hasActiveFilters = computed(() => {
+    const kind = this.itemKindFilter();
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    const q = this.searchQuery().trim();
+    return !!kind || !!from || !!to || !!q;
+  });
+
+  /** Toolbar trigger: uppercase kind (e.g. FILE) or “All types”. */
+  readonly typeFilterButtonLabel = computed(() => {
+    const v = this.itemKindFilter();
+    if (!v) return 'All types';
+    return v.toUpperCase();
+  });
+
+  /** Chip text: human-readable label from type options. */
+  readonly typeFilterChipLabel = computed(() => {
+    const v = this.itemKindFilter();
+    if (!v) return '';
+    return this.typeOptions.find((o) => o.value === v)?.label ?? v;
+  });
+
+  readonly dateFilterChipLabel = computed(() => {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    const fmt = (s: string) => format(parseISO(`${s}T12:00:00`), 'MMM d, yyyy');
+    if (from && to) {
+      const lo = from < to ? from : to;
+      const hi = from < to ? to : from;
+      return `${fmt(lo)} – ${fmt(hi)}`;
+    }
+    if (from) return fmt(from);
+    if (to) return fmt(to);
+    return '';
+  });
 
   readonly calendarCells = computed(() => {
     const cursor = this.calendarViewMonth();
@@ -844,6 +925,34 @@ export class TrashComponent implements OnInit {
   clearDates(): void {
     this.dateFrom.set('');
     this.dateTo.set('');
+    this.datePanelOpen.set(false);
+    this.currentPage.set(1);
+  }
+
+  clearTypeFilter(): void {
+    this.itemKindFilter.set('');
+    this.typePanelOpen.set(false);
+    this.currentPage.set(1);
+  }
+
+  /** Clear date range only (e.g. from chip); leave calendar panel state as-is. */
+  clearDatesOnly(): void {
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.currentPage.set(1);
+  }
+
+  clearSearchFilter(): void {
+    this.searchQuery.set('');
+    this.currentPage.set(1);
+  }
+
+  resetAllFilters(): void {
+    this.searchQuery.set('');
+    this.itemKindFilter.set('');
+    this.dateFrom.set('');
+    this.dateTo.set('');
+    this.typePanelOpen.set(false);
     this.datePanelOpen.set(false);
     this.currentPage.set(1);
   }
