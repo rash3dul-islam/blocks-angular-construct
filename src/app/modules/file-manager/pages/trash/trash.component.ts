@@ -156,7 +156,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             >
               <ng-icon name="lucidePlusCircle" class="h-3.5 w-3.5 shrink-0 opacity-70" />
               {{ typeFilterButtonLabel() }}
-              <ng-icon name="lucideChevronRight" class="h-3 w-3 shrink-0 -rotate-90 opacity-60" />
+              <ng-icon name="lucideChevronDown" class="h-3 w-3 shrink-0 opacity-60" />
             </button>
             @if (typePanelOpen()) {
               <div
@@ -195,36 +195,18 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
             </button>
             @if (datePanelOpen()) {
               <div
-                class="absolute left-0 z-50 mt-1.5 w-[min(100vw-2rem,320px)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-border dark:bg-card dark:shadow-xl"
+                class="absolute left-0 z-50 mt-1.5 w-[min(100vw-2rem,340px)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-border dark:bg-card dark:shadow-xl"
                 (click)="$event.stopPropagation()"
                 role="dialog"
                 aria-label="Trashed date range"
               >
-                <div class="flex items-center gap-2 border-b border-slate-100 px-3 py-2.5 dark:border-border">
+                <div
+                  class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 pb-3 pt-4 dark:border-border"
+                >
+                  <span class="text-base font-normal leading-none text-slate-900 dark:text-foreground">Trashed Date</span>
                   <button
                     type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                    (click)="prevCalendarMonth($event)"
-                    title="Previous month"
-                    aria-label="Previous month"
-                  >
-                    <ng-icon name="lucideChevronLeft" class="h-4 w-4" />
-                  </button>
-                  <span class="min-w-0 flex-1 text-center text-sm font-semibold text-foreground">
-                    {{ calendarMonthTitle() }}
-                  </span>
-                  <button
-                    type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                    (click)="nextCalendarMonth($event)"
-                    title="Next month"
-                    aria-label="Next month"
-                  >
-                    <ng-icon name="lucideChevronRight" class="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
                     (click)="closeDatePanel($event)"
                     title="Close"
                     aria-label="Close calendar"
@@ -232,30 +214,53 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     <ng-icon name="lucideX" class="h-4 w-4" />
                   </button>
                 </div>
-                <div class="px-3 pt-2 pb-1">
-                  <div class="grid grid-cols-7 gap-y-0.5 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    <span class="py-1">Su</span>
-                    <span class="py-1">Mo</span>
-                    <span class="py-1">Tu</span>
-                    <span class="py-1">We</span>
-                    <span class="py-1">Th</span>
-                    <span class="py-1">Fr</span>
-                    <span class="py-1">Sa</span>
+                <div class="flex items-center gap-2 px-4 pb-3 pt-1">
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
+                    (click)="prevCalendarMonth($event)"
+                    title="Previous month"
+                    aria-label="Previous month"
+                  >
+                    <ng-icon name="lucideChevronLeft" class="h-4 w-4 text-muted-foreground" />
+                  </button>
+                  <span class="min-w-0 flex-1 text-center text-base font-normal text-slate-900 dark:text-foreground">
+                    {{ calendarMonthTitle() }}
+                  </span>
+                  <button
+                    type="button"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-foreground transition-colors hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/80"
+                    (click)="nextCalendarMonth($event)"
+                    title="Next month"
+                    aria-label="Next month"
+                  >
+                    <ng-icon name="lucideChevronRight" class="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <div class="px-4 pb-1 pt-0">
+                  <div
+                    class="grid grid-cols-7 gap-y-1 text-center text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-muted-foreground"
+                  >
+                    <span class="py-1.5">Su</span>
+                    <span class="py-1.5">Mo</span>
+                    <span class="py-1.5">Tu</span>
+                    <span class="py-1.5">We</span>
+                    <span class="py-1.5">Th</span>
+                    <span class="py-1.5">Fr</span>
+                    <span class="py-1.5">Sa</span>
                   </div>
-                  <div class="grid grid-cols-7 gap-y-1 pb-2 pt-0.5 text-center text-sm">
+                  <div class="grid grid-cols-7 gap-y-1.5 pb-1 pt-0.5 text-center text-sm">
                     @for (cell of calendarCells(); track cell.key) {
                       <button
                         type="button"
-                        class="relative mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-                        [class.text-muted-foreground]="cell.outside"
-                        [class.opacity-45]="cell.outside"
-                        [class.bg-teal-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.text-teal-900]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.dark:bg-teal-950/50]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.dark:text-teal-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
-                        [class.bg-teal-600]="calendarDayIsEndpoint(cell.iso)"
-                        [class.text-white]="calendarDayIsEndpoint(cell.iso)"
-                        [class.shadow-sm]="calendarDayIsEndpoint(cell.iso)"
+                        class="relative mx-auto flex h-9 w-9 items-center justify-center rounded-lg text-sm transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:hover:bg-muted/60"
+                        [class.text-slate-400]="cell.outside && !calendarDayInRange(cell.iso)"
+                        [class.text-foreground]="!cell.outside || calendarDayInRange(cell.iso)"
+                        [class.bg-slate-100]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:bg-muted/60]="calendarDayInRange(cell.iso) && !calendarDayIsEndpoint(cell.iso)"
+                        [class.bg-slate-200]="calendarDayIsEndpoint(cell.iso)"
+                        [class.font-semibold]="calendarDayIsEndpoint(cell.iso)"
+                        [class.dark:bg-muted]="calendarDayIsEndpoint(cell.iso)"
                         (click)="selectCalendarDay(cell.date, $event)"
                       >
                         {{ cell.dayOfMonth }}
@@ -263,13 +268,10 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     }
                   </div>
                 </div>
-                <div class="flex justify-center border-t border-slate-100 px-3 py-2.5 dark:border-border">
+                <div class="border-t border-slate-100 px-4 pb-4 pt-2 dark:border-border">
                   <button
-                    hlmBtn
-                    variant="ghost"
-                    size="sm"
                     type="button"
-                    class="text-sm text-muted-foreground hover:text-foreground"
+                    class="w-full cursor-pointer rounded-lg border border-slate-200 bg-white py-2.5 text-center text-sm font-normal text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(202,68%,53%)] focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
                     (click)="clearDates()"
                   >
                     Clear filter
