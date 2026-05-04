@@ -25,10 +25,14 @@ import {
   lucideChevronLeft,
   lucideChevronsLeft,
   lucideChevronsRight,
-  lucideArrowDownWideNarrow,
   lucideChevronDown,
   lucideChevronUp,
   lucideX,
+  lucideUserPlus,
+  lucideCopy,
+  lucideMove,
+  lucidePencil,
+  lucideDownload,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -46,6 +50,8 @@ import {
 } from 'date-fns';
 import { FileManagerService } from '../../services/file-manager.service';
 import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-manager.model';
+
+type SharedFilesSortKey = 'name' | 'sharedBy' | 'sharedDate' | 'lastModified' | 'size';
 
 @Component({
   selector: 'app-shared-files',
@@ -79,10 +85,14 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       lucideChevronLeft,
       lucideChevronsLeft,
       lucideChevronsRight,
-      lucideArrowDownWideNarrow,
       lucideChevronDown,
       lucideChevronUp,
       lucideX,
+      lucideUserPlus,
+      lucideCopy,
+      lucideMove,
+      lucidePencil,
+      lucideDownload,
     }),
   ],
   template: `
@@ -474,6 +484,170 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
         </div>
       }
 
+      @if (detailsItem(); as d) {
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          (click)="closeSharedDetails()"
+        >
+          <div
+            class="max-w-md w-full rounded-lg border border-border bg-card p-6 shadow-lg"
+            (click)="$event.stopPropagation()"
+          >
+            <h2 class="text-lg font-semibold mb-2 text-foreground">{{ d.name }}</h2>
+            <dl class="space-y-2 text-sm text-muted-foreground">
+              <div>
+                <dt class="inline font-medium text-foreground">Type:</dt>
+                {{ d.itemKind }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Size:</dt>
+                {{ displaySize(d) }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Shared by:</dt>
+                {{ sharedByName(d) }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Shared date:</dt>
+                {{ d.createdAt | date: 'medium' }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Modified:</dt>
+                {{ (d.lastModifiedAt ?? d.createdAt) | date: 'medium' }}
+              </div>
+            </dl>
+            <button hlmBtn class="mt-4 w-full" variant="outline" type="button" (click)="closeSharedDetails()">
+              Close
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (renameOpen()) {
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          (click)="closeRenameModal()"
+        >
+          <div
+            class="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+            (click)="$event.stopPropagation()"
+          >
+            <h2 class="text-lg font-semibold text-foreground">Rename</h2>
+            <div class="mt-4 space-y-2">
+              <label class="text-sm font-medium text-foreground" for="shared-rename-input">Name</label>
+              <input
+                id="shared-rename-input"
+                hlmInput
+                class="h-10 w-full"
+                [ngModel]="renameDraft()"
+                (ngModelChange)="renameDraft.set($event)"
+                (keydown.enter)="confirmRename()"
+              />
+            </div>
+            <div class="mt-6 flex items-center justify-end gap-2">
+              <button hlmBtn variant="outline" type="button" (click)="closeRenameModal()">Cancel</button>
+              <button hlmBtn type="button" [disabled]="!renameDraft().trim()" (click)="confirmRename()">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <ng-template #sharedRowActionsMenu let-item>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowShare($event, item)"
+        >
+          <ng-icon
+            name="lucideUserPlus"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Share</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowCopy($event, item)"
+        >
+          <ng-icon
+            name="lucideCopy"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Copy</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowMove($event, item)"
+        >
+          <ng-icon
+            name="lucideMove"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Move</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowRename($event, item)"
+        >
+          <ng-icon
+            name="lucidePencil"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Rename</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowViewDetails($event, item)"
+        >
+          <ng-icon
+            name="lucideInfo"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>View Details</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="onRowDownload($event, item)"
+        >
+          <ng-icon
+            name="lucideDownload"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Download</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm leading-snug text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 focus-visible:ring-inset dark:text-rose-400 dark:hover:bg-rose-950/30"
+          (click)="onRowRemove($event, item)"
+        >
+          <ng-icon
+            name="lucideTrash2"
+            class="h-4 w-4 shrink-0 text-rose-700 dark:text-rose-400"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Remove</span>
+        </button>
+      </ng-template>
+
       <!-- ── Grid View ───────────────────────────────────────────── -->
       @if (viewMode() === 'grid') {
         <div
@@ -509,101 +683,279 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- ── List View ───────────────────────────────────────────── -->
       @if (viewMode() === 'list') {
-        <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-muted/40">
-              <tr>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                >
-                  <button type="button" class="inline-flex items-center gap-1 hover:text-foreground">
-                    Name
-                    <ng-icon name="lucideArrowDownWideNarrow" class="h-3 w-3 opacity-60" />
-                  </button>
-                </th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                >
-                  Shared by
-                </th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                >
-                  <button type="button" class="inline-flex items-center gap-1 hover:text-foreground">
-                    Shared Date
-                    <ng-icon name="lucideArrowDownWideNarrow" class="h-3 w-3 opacity-60" />
-                  </button>
-                </th>
-                <th
-                  class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide"
-                >
-                  <button type="button" class="inline-flex items-center gap-1 hover:text-foreground">
-                    Last Modified
-                    <ng-icon name="lucideArrowDownWideNarrow" class="h-3 w-3 opacity-60" />
-                  </button>
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  <button type="button" class="inline-flex items-center gap-1 hover:text-foreground">
-                    Size
-                    <ng-icon name="lucideArrowDownWideNarrow" class="h-3 w-3 opacity-60" />
-                  </button>
-                </th>
-                <th class="w-12 px-2 py-3 text-center align-middle">
-                  <span class="inline-flex w-full items-center justify-center">
-                    <ng-icon name="lucideInfo" class="h-5 w-5 text-teal-600" />
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of paginatedFiles(); track item.fileId) {
-                <tr
-                  (dblclick)="onItemDoubleClick(item)"
-                  class="border-t border-border hover:bg-muted/30 transition-colors cursor-pointer"
-                >
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <ng-icon [name]="getFileIcon(item)" class="h-5 w-5 shrink-0" [class]="getIconColor(item)" />
-                      <span class="font-medium truncate">{{ item.name }}</span>
-                      @if (item.isShared) {
-                        <ng-icon name="lucideShare2" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      }
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center gap-2">
-                      <span
-                        class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground"
-                      >
-                        {{ sharedByInitials(item) }}
-                      </span>
-                      <span class="text-xs text-foreground">{{ sharedByName(item) }}</span>
-                    </div>
-                  </td>
-                  <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                    {{ item.createdAt | date: 'shortDate' }}
-                  </td>
-                  <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                    {{ item.lastModifiedAt ?? item.createdAt | date: 'shortDate' }}
-                  </td>
-                  <td class="px-4 py-3 text-muted-foreground">{{ displaySize(item) }}</td>
-                  <td class="px-2 py-3 text-center align-middle">
-                    <span class="inline-flex w-full items-center justify-center">
-                      <ng-icon
-                        name="lucideMoreVertical"
-                        class="h-4 w-4 text-muted-foreground"
-                        (click)="$event.stopPropagation()"
-                      />
-                    </span>
-                  </td>
-                </tr>
-              } @empty {
+        <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col min-h-[280px]">
+          <div class="overflow-x-auto">
+            <table class="w-full table-fixed min-w-[960px] text-sm">
+              <colgroup>
+                <col class="min-w-0 w-[34%]" />
+                <col class="min-w-0 w-[18%]" />
+                <col class="w-[8.25rem]" />
+                <col class="w-[8.25rem]" />
+                <col class="w-[5.5rem]" />
+                <col class="w-14" />
+              </colgroup>
+              <thead class="bg-background border-b border-border">
                 <tr>
-                  <td colspan="6" class="px-4 py-16 text-center text-muted-foreground">No shared files found.</td>
+                  <th
+                    class="min-w-0 px-6 py-3.5 text-left align-middle"
+                    [attr.aria-sort]="sortKey() === 'name' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                  >
+                    <button
+                      type="button"
+                      class="inline-flex min-w-0 max-w-full cursor-pointer select-none flex-nowrap items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-left transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                      (click)="cycleSortColumn('name', $event)"
+                      title="Sort by name (click to toggle A–Z / Z–A)"
+                    >
+                      <span class="min-w-0 truncate text-sm font-medium text-slate-600 dark:text-slate-400">Name</span>
+                      <span
+                        class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <ng-icon
+                          name="lucideChevronUp"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('name', 'asc')"
+                          [class.dark:text-teal-400]="sortArrowActive('name', 'asc')"
+                        />
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('name', 'desc')"
+                          [class.dark:text-teal-400]="sortArrowActive('name', 'desc')"
+                        />
+                      </span>
+                    </button>
+                  </th>
+                  <th
+                    class="min-w-0 px-6 py-3.5 text-left align-middle"
+                    [attr.aria-sort]="
+                      sortKey() === 'sharedBy' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null
+                    "
+                  >
+                    <button
+                      type="button"
+                      class="inline-flex min-w-0 max-w-full cursor-pointer select-none flex-nowrap items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-1.5 py-1 text-left transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                      (click)="cycleSortColumn('sharedBy', $event)"
+                      title="Sort by shared by (click to toggle A–Z / Z–A)"
+                    >
+                      <span class="min-w-0 truncate text-sm font-medium text-slate-600 dark:text-slate-400"
+                        >Shared by</span
+                      >
+                      <span
+                        class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <ng-icon
+                          name="lucideChevronUp"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('sharedBy', 'asc')"
+                          [class.dark:text-teal-400]="sortArrowActive('sharedBy', 'asc')"
+                        />
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('sharedBy', 'desc')"
+                          [class.dark:text-teal-400]="sortArrowActive('sharedBy', 'desc')"
+                        />
+                      </span>
+                    </button>
+                  </th>
+                  <th
+                    class="py-3.5 pl-4 pr-3 text-center align-middle"
+                    [attr.aria-sort]="
+                      sortKey() === 'sharedDate' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null
+                    "
+                  >
+                    <button
+                      type="button"
+                      class="mx-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-2 pr-1 transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                      (click)="cycleSortColumn('sharedDate', $event)"
+                      title="Sort by shared date (click to toggle oldest / newest first)"
+                    >
+                      <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400"
+                        >Shared date</span
+                      >
+                      <span
+                        class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <ng-icon
+                          name="lucideChevronUp"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('sharedDate', 'asc')"
+                          [class.dark:text-teal-400]="sortArrowActive('sharedDate', 'asc')"
+                        />
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('sharedDate', 'desc')"
+                          [class.dark:text-teal-400]="sortArrowActive('sharedDate', 'desc')"
+                        />
+                      </span>
+                    </button>
+                  </th>
+                  <th
+                    class="py-3.5 pl-4 pr-3 text-center align-middle"
+                    [attr.aria-sort]="
+                      sortKey() === 'lastModified' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null
+                    "
+                  >
+                    <button
+                      type="button"
+                      class="mx-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-center gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-2 pr-1 transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                      (click)="cycleSortColumn('lastModified', $event)"
+                      title="Sort by last modified (click to toggle oldest / newest first)"
+                    >
+                      <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400"
+                        >Last modified</span
+                      >
+                      <span
+                        class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <ng-icon
+                          name="lucideChevronUp"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('lastModified', 'asc')"
+                          [class.dark:text-teal-400]="sortArrowActive('lastModified', 'asc')"
+                        />
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('lastModified', 'desc')"
+                          [class.dark:text-teal-400]="sortArrowActive('lastModified', 'desc')"
+                        />
+                      </span>
+                    </button>
+                  </th>
+                  <th
+                    class="py-3.5 pl-3 pr-4 text-right align-middle"
+                    [attr.aria-sort]="sortKey() === 'size' ? (sortDir() === 'asc' ? 'ascending' : 'descending') : null"
+                  >
+                    <button
+                      type="button"
+                      class="ml-auto inline-flex w-max max-w-full cursor-pointer select-none flex-nowrap items-center justify-end gap-2 rounded-lg border border-transparent bg-transparent py-1 pl-1 pr-2 text-right transition-colors hover:border-slate-200 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
+                      (click)="cycleSortColumn('size', $event)"
+                      title="Sort by size (click to toggle smallest / largest first)"
+                    >
+                      <span class="whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-400">Size</span>
+                      <span
+                        class="inline-flex h-[26px] w-7 shrink-0 flex-col items-center justify-center gap-0 text-slate-400 dark:text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <ng-icon
+                          name="lucideChevronUp"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('size', 'asc')"
+                          [class.dark:text-teal-400]="sortArrowActive('size', 'asc')"
+                        />
+                        <ng-icon
+                          name="lucideChevronDown"
+                          class="h-3 w-3"
+                          [class.text-teal-600]="sortArrowActive('size', 'desc')"
+                          [class.dark:text-teal-400]="sortArrowActive('size', 'desc')"
+                        />
+                      </span>
+                    </button>
+                  </th>
+                  <th class="w-14 px-2 py-3.5 text-center align-middle">
+                    <div class="flex w-full items-center justify-center">
+                      <button
+                        type="button"
+                        class="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-slate-900 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:text-slate-100 dark:hover:bg-slate-800/80 dark:focus-visible:ring-slate-600"
+                        title="About shared files: items listed here are shared with you. Use the row menu for more actions."
+                        aria-label="About shared files list"
+                      >
+                        <ng-icon
+                          name="lucideInfo"
+                          class="h-5 w-5 shrink-0"
+                          style="--ng-icon__stroke-width: 1.5px"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
+                  </th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @for (item of paginatedFiles(); track item.fileId) {
+                  <tr
+                    (dblclick)="onItemDoubleClick(item)"
+                    class="border-t border-border hover:bg-muted/25 transition-colors cursor-pointer"
+                  >
+                    <td class="min-w-0 px-6 py-3">
+                      <div class="flex min-w-0 items-center gap-3">
+                        <div
+                          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                          [class]="getIconBg(item)"
+                        >
+                          <ng-icon [name]="getFileIcon(item)" class="h-4 w-4" [class]="getIconColor(item)" />
+                        </div>
+                        <span class="font-medium truncate text-foreground">{{ item.name }}</span>
+                        @if (item.isShared) {
+                          <ng-icon
+                            name="lucideShare2"
+                            class="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                            title="Shared"
+                          />
+                        }
+                      </div>
+                    </td>
+                    <td class="min-w-0 px-6 py-3">
+                      <div class="flex min-w-0 items-center gap-2">
+                        <span
+                          class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground"
+                        >
+                          {{ sharedByInitials(item) }}
+                        </span>
+                        <span class="min-w-0 truncate text-xs text-foreground">{{ sharedByName(item) }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 pl-4 pr-3 text-center text-xs text-muted-foreground whitespace-nowrap align-middle">
+                      {{ item.createdAt | date: 'MM/dd/yyyy' }}
+                    </td>
+                    <td class="py-3 pl-4 pr-3 text-center text-xs text-muted-foreground whitespace-nowrap align-middle">
+                      {{ (item.lastModifiedAt ?? item.createdAt) | date: 'MM/dd/yyyy' }}
+                    </td>
+                    <td
+                      class="py-3 pl-3 pr-4 text-right whitespace-nowrap align-middle tabular-nums text-muted-foreground"
+                    >
+                      {{ displaySize(item) }}
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <div class="relative inline-flex items-center justify-center">
+                        <button
+                          type="button"
+                          class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                          aria-label="Row actions"
+                          aria-haspopup="menu"
+                          [attr.aria-expanded]="openRowMenuId() === item.fileId"
+                          (click)="toggleRowMenu($event, item.fileId)"
+                        >
+                          <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                        </button>
+                        @if (openRowMenuId() === item.fileId) {
+                          <div
+                            class="absolute right-0 top-full z-50 mt-1 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
+                            role="menu"
+                            (click)="$event.stopPropagation()"
+                          >
+                            <ng-container
+                              *ngTemplateOutlet="sharedRowActionsMenu; context: { $implicit: item }"
+                            />
+                          </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="px-4 py-16 text-center text-muted-foreground">No shared files found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
           <div
             class="flex flex-col items-end sm:flex-row sm:items-center sm:justify-end gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
           >
@@ -695,9 +1047,17 @@ export class SharedFilesComponent implements OnInit {
   readonly uploading = signal(false);
   readonly createFolderOpen = signal(false);
   readonly newFolderName = signal('');
+  /** List row “⋯” menu (Share, Copy, …). */
+  readonly openRowMenuId = signal<string | null>(null);
+  readonly detailsItem = signal<FileItem | null>(null);
+  readonly renameOpen = signal(false);
+  readonly renamingItem = signal<FileItem | null>(null);
+  readonly renameDraft = signal('');
   readonly currentPage = signal(1);
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50];
+  readonly sortKey = signal<SharedFilesSortKey>('name');
+  readonly sortDir = signal<'asc' | 'desc'>('asc');
 
   readonly typeOptions: { value: FileItemKind | ''; label: string }[] = [
     { value: '', label: 'All types' },
@@ -713,6 +1073,7 @@ export class SharedFilesComponent implements OnInit {
     this.datePanelOpen.set(false);
     this.addMenuOpen.set(false);
     this.createFolderOpen.set(false);
+    this.openRowMenuId.set(null);
   };
 
   readonly filteredFiles = computed(() => {
@@ -740,14 +1101,44 @@ export class SharedFilesComponent implements OnInit {
     }
     return out;
   });
+
+  readonly sortedFiles = computed(() => {
+    const list = [...this.filteredFiles()];
+    const key = this.sortKey();
+    const dir = this.sortDir();
+    const mul = dir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      let cmp = 0;
+      switch (key) {
+        case 'name':
+          cmp = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+          break;
+        case 'sharedBy':
+          cmp = this.sharedByName(a).localeCompare(this.sharedByName(b), undefined, { sensitivity: 'base' });
+          break;
+        case 'sharedDate':
+          cmp = this.sharedAtMs(a) - this.sharedAtMs(b);
+          break;
+        case 'lastModified':
+          cmp = this.lastModifiedMs(a) - this.lastModifiedMs(b);
+          break;
+        case 'size':
+          cmp = this.sizeBytes(a) - this.sizeBytes(b);
+          break;
+      }
+      return cmp * mul;
+    });
+    return list;
+  });
+
   readonly totalPages = computed(() =>
-    Math.max(1, Math.ceil(this.filteredFiles().length / this.pageSize()) || 1)
+    Math.max(1, Math.ceil(this.sortedFiles().length / this.pageSize()) || 1)
   );
   readonly paginatedFiles = computed(() => {
     const page = this.currentPage();
     const size = this.pageSize();
     const start = (page - 1) * size;
-    return this.filteredFiles().slice(start, start + size);
+    return this.sortedFiles().slice(start, start + size);
   });
 
   readonly hasActiveFilters = computed(() => {
@@ -962,6 +1353,104 @@ export class SharedFilesComponent implements OnInit {
 
   private lastModifiedMs(item: FileItem): number {
     return new Date(item.lastModifiedAt ?? item.createdAt).getTime();
+  }
+
+  private sharedAtMs(item: FileItem): number {
+    return new Date(item.createdAt).getTime();
+  }
+
+  private sizeBytes(item: FileItem): number {
+    return item.size ?? 0;
+  }
+
+  sortArrowActive(key: SharedFilesSortKey, dir: 'asc' | 'desc'): boolean {
+    return this.sortKey() === key && this.sortDir() === dir;
+  }
+
+  setSort(key: SharedFilesSortKey, dir: 'asc' | 'desc', ev?: Event): void {
+    ev?.stopPropagation();
+    this.sortKey.set(key);
+    this.sortDir.set(dir);
+    this.currentPage.set(1);
+  }
+
+  /** One control for label + chevrons: new column → asc; same column → toggle asc/desc. */
+  cycleSortColumn(key: SharedFilesSortKey, ev?: Event): void {
+    if (this.sortKey() !== key) {
+      this.setSort(key, 'asc', ev);
+      return;
+    }
+    this.setSort(key, this.sortDir() === 'asc' ? 'desc' : 'asc', ev);
+  }
+
+  toggleRowMenu(ev: Event, id: string): void {
+    ev.stopPropagation();
+    this.openRowMenuId.update((cur) => (cur === id ? null : id));
+  }
+
+  closeSharedDetails(): void {
+    this.detailsItem.set(null);
+  }
+
+  onRowShare(ev: Event, _item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+  }
+
+  onRowCopy(ev: Event, _item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+  }
+
+  onRowMove(ev: Event, _item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+  }
+
+  onRowRename(ev: Event, item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+    this.renamingItem.set(item);
+    this.renameDraft.set(item.name);
+    this.renameOpen.set(true);
+  }
+
+  closeRenameModal(): void {
+    this.renameOpen.set(false);
+    this.renamingItem.set(null);
+    this.renameDraft.set('');
+  }
+
+  confirmRename(): void {
+    const item = this.renamingItem();
+    const name = this.renameDraft().trim();
+    if (!item || !name) {
+      this.closeRenameModal();
+      return;
+    }
+    this.files.update((list) => list.map((f) => (f.fileId === item.fileId ? { ...f, name } : f)));
+    this.closeRenameModal();
+  }
+
+  onRowViewDetails(ev: Event, item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+    this.detailsItem.set(item);
+  }
+
+  onRowDownload(ev: Event, item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+    if (!item.downloadUrl) return;
+    window.open(item.downloadUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  onRowRemove(ev: Event, item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+    this.fileService.deleteFile(item.fileId).subscribe(() => {
+      this.files.update((list) => list.filter((f) => f.fileId !== item.fileId));
+    });
   }
 
   openUploadModal(): void {
