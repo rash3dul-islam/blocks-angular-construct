@@ -28,6 +28,8 @@ import {
   lucideX,
   lucideVideo,
   lucideMusic,
+  lucideFileVideo,
+  lucideFileAudio,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -77,6 +79,8 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
       lucideX,
       lucideVideo,
       lucideMusic,
+      lucideFileVideo,
+      lucideFileAudio,
     }),
   ],
   template: `
@@ -566,48 +570,111 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
         }
 
         @if (viewMode() === 'grid') {
-          <div class="rounded-xl border border-border bg-card shadow-sm overflow-visible flex flex-col">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
-              @for (item of paginatedFiles(); track item.fileId) {
-                <div class="group relative rounded-xl border border-border bg-background p-4 flex flex-col gap-2 shadow-sm">
-                  <div class="flex items-start justify-between gap-2">
+          <div
+            class="flex flex-col gap-8 overflow-visible rounded-xl bg-[#F8F9FB] p-4 dark:bg-card md:p-6"
+          >
+            @if (gridTrashFolders().length > 0) {
+              <section class="flex flex-col gap-3">
+                <h2 class="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Folder ({{ gridTrashFolders().length }})
+                </h2>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                  @for (item of gridTrashFolders(); track item.fileId) {
                     <div
-                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                      [class]="iconBgFor(item)"
+                      class="relative flex min-h-[3.25rem] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm dark:border-border dark:bg-card"
                     >
-                      <ng-icon [name]="iconFor(item)" class="h-5 w-5" [class]="iconColorFor(item)"></ng-icon>
-                    </div>
-                    <button
-                      type="button"
-                      class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-                      (click)="toggleRowMenu($event, item.fileId)"
-                      aria-label="Row actions"
-                    >
-                      <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
-                    </button>
-                    @if (openRowMenuId() === item.fileId) {
                       <div
-                        class="absolute right-3 top-11 z-50 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
-                        (click)="$event.stopPropagation()"
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-file-type-folder-background"
                       >
-                        <ng-container *ngTemplateOutlet="trashRowActionsMenu; context: { $implicit: item }" />
+                        <ng-icon
+                          name="lucideFolder"
+                          class="h-4 w-4"
+                          [color]="'hsl(var(--folder-icon-color))'"
+                          [strokeWidth]="1.5"
+                          aria-hidden="true"
+                        />
                       </div>
-                    }
-                  </div>
-                  <div class="min-w-0 pt-1">
-                    <div class="flex items-center gap-1 min-w-0">
-                      <span class="text-xs font-medium truncate text-foreground">{{ item.name }}</span>
-                      @if (item.isShared) {
-                        <ng-icon name="lucideShare2" class="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <div class="flex min-w-0 flex-1 items-center gap-1.5">
+                        <span class="truncate text-sm font-medium text-foreground">{{ item.name }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                        (click)="toggleRowMenu($event, item.fileId)"
+                        aria-label="Row actions"
+                      >
+                        <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                      </button>
+                      @if (openRowMenuId() === item.fileId) {
+                        <div
+                          class="absolute right-2 top-full z-50 mt-1 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <ng-container *ngTemplateOutlet="trashRowActionsMenu; context: { $implicit: item }" />
+                        </div>
                       }
                     </div>
-                    <div class="text-[11px] text-muted-foreground mt-1">
-                      {{ trashedAt(item) | date: 'MM/dd/yyyy' }} · {{ item.itemKind }} · {{ displaySize(item) }}
-                    </div>
-                  </div>
+                  }
                 </div>
-              }
-            </div>
+              </section>
+            }
+
+            @if (gridTrashFiles().length > 0) {
+              <section class="flex flex-col gap-3">
+                <h2 class="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  File ({{ gridTrashFiles().length }})
+                </h2>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                  @for (item of gridTrashFiles(); track item.fileId) {
+                    <div
+                      class="relative flex min-h-[220px] flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-border dark:bg-card"
+                    >
+                      <div class="flex flex-1 flex-col items-center justify-center py-6">
+                        <ng-icon
+                          [name]="iconFor(item)"
+                          class="h-14 w-14 sm:h-16 sm:w-16"
+                          [class]="iconColorFor(item)"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div
+                        class="mt-auto flex items-center gap-2 border-t border-slate-100 pt-3 dark:border-border"
+                      >
+                        <div
+                          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                          [class]="iconBgFor(item)"
+                        >
+                          <ng-icon
+                            [name]="iconFor(item)"
+                            class="h-4 w-4"
+                            [class]="iconColorFor(item)"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{{ item.name }}</span>
+                        <button
+                          type="button"
+                          class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+                          (click)="toggleRowMenu($event, item.fileId)"
+                          aria-label="Row actions"
+                        >
+                          <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                        </button>
+                      </div>
+                      @if (openRowMenuId() === item.fileId) {
+                        <div
+                          class="absolute right-2 top-full z-50 mt-1 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <ng-container *ngTemplateOutlet="trashRowActionsMenu; context: { $implicit: item }" />
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </section>
+            }
+
             <ng-container *ngTemplateOutlet="paginationTpl" />
           </div>
         }
@@ -926,6 +993,14 @@ export class TrashComponent implements OnInit {
     return this.sortedFiles().slice(start, start + size);
   });
 
+  /** Grid: trashed folders vs other kinds (shown under “File (n)” like the product mock). */
+  readonly gridTrashFolders = computed(() =>
+    this.paginatedFiles().filter((f) => f.itemKind === 'Folder')
+  );
+  readonly gridTrashFiles = computed(() =>
+    this.paginatedFiles().filter((f) => f.itemKind !== 'Folder')
+  );
+
   ngOnInit(): void {
     document.addEventListener('click', this._closePanels);
     this.destroyRef.onDestroy(() => document.removeEventListener('click', this._closePanels));
@@ -1153,6 +1228,13 @@ export class TrashComponent implements OnInit {
   }
 
   iconFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    /** Matches product tiles: document + camera (video), document + waveform (audio), lined page (Word). */
+    if (this.isVideoFilename(lower)) return 'lucideFileVideo';
+    if (this.isAudioFilename(lower)) return 'lucideFileAudio';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) {
+      return 'lucideFileText';
+    }
     switch (item.itemKind) {
       case 'Folder':
         return 'lucideFolder';
@@ -1164,13 +1246,15 @@ export class TrashComponent implements OnInit {
         return 'lucideVideo';
       case 'File':
       default:
-        return item.mimeType?.includes('pdf') || item.name.toLowerCase().endsWith('.pdf')
-          ? 'lucideFileText'
-          : 'lucideFile';
+        return item.mimeType?.includes('pdf') || lower.endsWith('.pdf') ? 'lucideFileText' : 'lucideFile';
     }
   }
 
   iconColorFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    if (this.isVideoFilename(lower)) return 'text-sky-600';
+    if (this.isAudioFilename(lower)) return 'text-violet-500';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'text-teal-600';
     switch (item.itemKind) {
       case 'Folder':
         return 'text-amber-500';
@@ -1187,6 +1271,10 @@ export class TrashComponent implements OnInit {
   }
 
   iconBgFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    if (this.isVideoFilename(lower)) return 'bg-sky-50 dark:bg-sky-950/30';
+    if (this.isAudioFilename(lower)) return 'bg-violet-50 dark:bg-violet-950/30';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'bg-teal-50 dark:bg-teal-950/30';
     switch (item.itemKind) {
       case 'Folder':
         return 'bg-amber-50 dark:bg-amber-950/40';
@@ -1199,6 +1287,14 @@ export class TrashComponent implements OnInit {
       default:
         return 'bg-teal-50 dark:bg-teal-950/30';
     }
+  }
+
+  private isVideoFilename(lower: string): boolean {
+    return ['.mp4', '.mov', '.webm', '.mkv'].some((ext) => lower.endsWith(ext));
+  }
+
+  private isAudioFilename(lower: string): boolean {
+    return ['.mp3', '.wav', '.m4a', '.flac'].some((ext) => lower.endsWith(ext));
   }
 
   displaySize(item: FileItem): string {
