@@ -215,7 +215,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
             <div class="relative">
               <button
                 type="button"
-                class="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
+                class="inline-flex h-10 cursor-pointer items-center gap-2 rounded-none border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
                 (click)="toggleDatePanel($event)"
                 [attr.aria-expanded]="datePanelOpen()"
                 aria-haspopup="dialog"
