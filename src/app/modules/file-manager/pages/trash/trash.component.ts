@@ -28,6 +28,8 @@ import {
   lucideX,
   lucideVideo,
   lucideMusic,
+  lucideFileVideo,
+  lucideFileAudio,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -77,6 +79,8 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
       lucideX,
       lucideVideo,
       lucideMusic,
+      lucideFileVideo,
+      lucideFileAudio,
     }),
   ],
   template: `
@@ -620,7 +624,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 <h2 class="text-sm font-medium text-slate-600 dark:text-slate-400">
                   File ({{ gridTrashFiles().length }})
                 </h2>
-                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                   @for (item of gridTrashFiles(); track item.fileId) {
                     <div
                       class="relative flex min-h-[220px] flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-border dark:bg-card"
@@ -647,12 +651,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                             aria-hidden="true"
                           />
                         </div>
-                        <div class="flex min-w-0 flex-1 items-center gap-1">
-                          <span class="truncate text-sm font-medium text-foreground">{{ item.name }}</span>
-                          @if (item.isShared) {
-                            <ng-icon name="lucideShare2" class="h-3 w-3 shrink-0 text-muted-foreground" />
-                          }
-                        </div>
+                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{{ item.name }}</span>
                         <button
                           type="button"
                           class="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
@@ -1229,6 +1228,13 @@ export class TrashComponent implements OnInit {
   }
 
   iconFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    /** Matches product tiles: document + camera (video), document + waveform (audio), lined page (Word). */
+    if (this.isVideoFilename(lower)) return 'lucideFileVideo';
+    if (this.isAudioFilename(lower)) return 'lucideFileAudio';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) {
+      return 'lucideFileText';
+    }
     switch (item.itemKind) {
       case 'Folder':
         return 'lucideFolder';
@@ -1240,13 +1246,15 @@ export class TrashComponent implements OnInit {
         return 'lucideVideo';
       case 'File':
       default:
-        return item.mimeType?.includes('pdf') || item.name.toLowerCase().endsWith('.pdf')
-          ? 'lucideFileText'
-          : 'lucideFile';
+        return item.mimeType?.includes('pdf') || lower.endsWith('.pdf') ? 'lucideFileText' : 'lucideFile';
     }
   }
 
   iconColorFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    if (this.isVideoFilename(lower)) return 'text-sky-600';
+    if (this.isAudioFilename(lower)) return 'text-violet-500';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'text-teal-600';
     switch (item.itemKind) {
       case 'Folder':
         return 'text-amber-500';
@@ -1263,6 +1271,10 @@ export class TrashComponent implements OnInit {
   }
 
   iconBgFor(item: FileItem): string {
+    const lower = item.name.toLowerCase();
+    if (this.isVideoFilename(lower)) return 'bg-sky-50 dark:bg-sky-950/30';
+    if (this.isAudioFilename(lower)) return 'bg-violet-50 dark:bg-violet-950/30';
+    if (lower.endsWith('.doc') || lower.endsWith('.docx')) return 'bg-teal-50 dark:bg-teal-950/30';
     switch (item.itemKind) {
       case 'Folder':
         return 'bg-amber-50 dark:bg-amber-950/40';
@@ -1275,6 +1287,14 @@ export class TrashComponent implements OnInit {
       default:
         return 'bg-teal-50 dark:bg-teal-950/30';
     }
+  }
+
+  private isVideoFilename(lower: string): boolean {
+    return ['.mp4', '.mov', '.webm', '.mkv'].some((ext) => lower.endsWith(ext));
+  }
+
+  private isAudioFilename(lower: string): boolean {
+    return ['.mp3', '.wav', '.m4a', '.flac'].some((ext) => lower.endsWith(ext));
   }
 
   displaySize(item: FileItem): string {
