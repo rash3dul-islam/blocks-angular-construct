@@ -58,6 +58,13 @@ module.exports = {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        /** react_Constract file-manager file-type tokens */
+        'file-type': {
+          folder: {
+            icon: 'hsl(var(--folder-icon-color))',
+            background: 'hsl(var(--folder-icon-background))',
+          },
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
