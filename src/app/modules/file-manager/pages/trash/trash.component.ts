@@ -548,25 +548,10 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                           </button>
                           @if (openRowMenuId() === item.fileId) {
                             <div
-                              class="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                              class="absolute right-0 top-full z-50 mt-1 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
                               (click)="$event.stopPropagation()"
                             >
-                              <button
-                                type="button"
-                                class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                                (click)="restoreFile(item)"
-                              >
-                                <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
-                                Restore
-                              </button>
-                              <button
-                                type="button"
-                                class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
-                                (click)="permanentDelete(item)"
-                              >
-                                <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
-                                Delete permanently
-                              </button>
+                              <ng-container *ngTemplateOutlet="trashRowActionsMenu; context: { $implicit: item }" />
                             </div>
                           }
                         </div>
@@ -581,7 +566,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
         }
 
         @if (viewMode() === 'grid') {
-          <div class="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col">
+          <div class="rounded-xl border border-border bg-card shadow-sm overflow-visible flex flex-col">
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 p-4">
               @for (item of paginatedFiles(); track item.fileId) {
                 <div class="group relative rounded-xl border border-border bg-background p-4 flex flex-col gap-2 shadow-sm">
@@ -602,25 +587,10 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                     </button>
                     @if (openRowMenuId() === item.fileId) {
                       <div
-                        class="absolute right-3 top-11 z-50 min-w-[160px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                        class="absolute right-3 top-11 z-50 min-w-[208px] overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-border dark:bg-popover"
                         (click)="$event.stopPropagation()"
                       >
-                        <button
-                          type="button"
-                          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                          (click)="restoreFile(item)"
-                        >
-                          <ng-icon name="lucideRefreshCw" class="h-3.5 w-3.5" />
-                          Restore
-                        </button>
-                        <button
-                          type="button"
-                          class="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
-                          (click)="permanentDelete(item)"
-                        >
-                          <ng-icon name="lucideTrash2" class="h-3.5 w-3.5" />
-                          Delete permanently
-                        </button>
+                        <ng-container *ngTemplateOutlet="trashRowActionsMenu; context: { $implicit: item }" />
                       </div>
                     }
                   </div>
@@ -642,6 +612,99 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
           </div>
         }
       }
+
+      @if (detailsItem(); as d) {
+        <div
+          class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+          (click)="closeTrashDetails()"
+          role="presentation"
+        >
+          <div
+            class="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-xl dark:border-border dark:bg-card"
+            (click)="$event.stopPropagation()"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="trash-details-title"
+          >
+            <h2 id="trash-details-title" class="text-lg font-semibold text-slate-900 dark:text-foreground">{{ d.name }}</h2>
+            <dl class="mt-4 space-y-2 text-sm text-muted-foreground">
+              <div>
+                <dt class="inline font-medium text-foreground">Type:</dt>
+                {{ d.itemKind }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Size:</dt>
+                {{ displaySize(d) }}
+              </div>
+              <div>
+                <dt class="inline font-medium text-foreground">Trashed:</dt>
+                {{ trashedAt(d) | date: 'medium' }}
+              </div>
+              <div class="break-words">
+                <dt class="inline font-medium text-foreground">Path:</dt>
+                {{ d.path }}
+              </div>
+              @if (d.isShared) {
+                <div>
+                  <dt class="inline font-medium text-foreground">Shared:</dt>
+                  Yes
+                </div>
+              }
+            </dl>
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="mt-6 w-full"
+              (click)="closeTrashDetails()"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      }
+
+      <ng-template #trashRowActionsMenu let-item>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="openTrashDetails($event, item)"
+        >
+          <ng-icon
+            name="lucideInfo"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>View Details</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm text-slate-900 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-inset dark:text-foreground dark:hover:bg-muted/80"
+          (click)="restoreFile(item)"
+        >
+          <ng-icon
+            name="lucideRefreshCw"
+            class="h-4 w-4 shrink-0 text-slate-900 dark:text-foreground"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Restore</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-10 w-full cursor-pointer items-center gap-3 rounded-sm px-3 text-left text-sm leading-snug text-rose-700 transition-colors hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 focus-visible:ring-inset dark:text-rose-400 dark:hover:bg-rose-950/30"
+          (click)="permanentDelete(item)"
+        >
+          <ng-icon
+            name="lucideTrash2"
+            class="h-4 w-4 shrink-0 text-rose-700 dark:text-rose-400"
+            style="--ng-icon__stroke-width: 1.5px"
+            aria-hidden="true"
+          />
+          <span>Delete forever</span>
+        </button>
+      </ng-template>
 
       <ng-template #paginationTpl>
         <div
@@ -726,6 +789,8 @@ export class TrashComponent implements OnInit {
   readonly typePanelOpen = signal(false);
   readonly datePanelOpen = signal(false);
   readonly openRowMenuId = signal<string | null>(null);
+  /** Row “View details” modal (list + grid use the same flow). */
+  readonly detailsItem = signal<FileItem | null>(null);
   readonly currentPage = signal(1);
   readonly pageSize = signal(10);
   readonly pageSizeOptions = [10, 25, 50];
@@ -1040,6 +1105,16 @@ export class TrashComponent implements OnInit {
   toggleRowMenu(ev: Event, id: string): void {
     ev.stopPropagation();
     this.openRowMenuId.update((cur) => (cur === id ? null : id));
+  }
+
+  openTrashDetails(ev: Event, item: FileItem): void {
+    ev.stopPropagation();
+    this.openRowMenuId.set(null);
+    this.detailsItem.set(item);
+  }
+
+  closeTrashDetails(): void {
+    this.detailsItem.set(null);
   }
 
   trashedAt(item: FileItem): string {
