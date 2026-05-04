@@ -567,7 +567,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
 
         @if (viewMode() === 'grid') {
           <div
-            class="flex flex-col gap-8 overflow-visible rounded-xl border border-slate-200 bg-[#F8F9FB] p-4 shadow-sm dark:border-border dark:bg-card md:p-6"
+            class="flex flex-col gap-8 overflow-visible rounded-xl bg-[#F8F9FB] p-4 dark:bg-card md:p-6"
           >
             @if (gridTrashFolders().length > 0) {
               <section class="flex flex-col gap-3">
