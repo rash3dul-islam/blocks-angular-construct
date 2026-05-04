@@ -574,7 +574,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                 <h2 class="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Folder ({{ gridTrashFolders().length }})
                 </h2>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                   @for (item of gridTrashFolders(); track item.fileId) {
                     <div
                       class="relative flex min-h-[3.25rem] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-sm dark:border-border dark:bg-card"
@@ -592,9 +592,6 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
                       </div>
                       <div class="flex min-w-0 flex-1 items-center gap-1.5">
                         <span class="truncate text-sm font-medium text-foreground">{{ item.name }}</span>
-                        @if (item.isShared) {
-                          <ng-icon name="lucideShare2" class="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        }
                       </div>
                       <button
                         type="button"
