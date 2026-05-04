@@ -63,29 +63,28 @@ interface MetricCard {
       <!-- Header -->
       <div class="mb-[18px] flex items-center justify-between md:mb-[32px]">
         <h3 class="text-2xl font-bold tracking-tight text-foreground">Dashboard</h3>
-        <div class="flex gap-4">
+        <div class="flex items-center gap-3">
           <button
             hlmBtn
             variant="outline"
-            class="font-bold"
             type="button"
+            class="h-9 gap-2 !rounded-[6px] border-border bg-white px-3.5 font-medium text-foreground shadow-none hover:bg-muted/60 dark:bg-card dark:hover:bg-muted/40"
             aria-label="Sync dashboard data"
             (click)="sync()"
           >
-            <ng-icon name="lucideRefreshCcw" class="h-3 w-3" />
-            <span class="sr-only sm:not-sr-only sm:whitespace-nowrap text-sm font-bold">Sync</span>
+            <ng-icon name="lucideRefreshCcw" class="h-4 w-4 shrink-0 text-foreground" />
+            <span class="whitespace-nowrap text-sm font-medium">Sync</span>
           </button>
           <button
             hlmBtn
+            variant="default"
             type="button"
-            class="font-bold"
+            class="h-9 gap-2 !rounded-[6px] border-transparent bg-primary px-3.5 font-medium text-primary-foreground shadow-none hover:bg-primary/90"
             aria-label="Export dashboard data"
             (click)="exportDashboard()"
           >
-            <ng-icon name="lucideDownload" class="h-3 w-3" />
-            <span class="sr-only sm:not-sr-only sm:whitespace-nowrap text-sm font-bold"
-              >Export</span
-            >
+            <ng-icon name="lucideDownload" class="h-4 w-4 shrink-0 text-primary-foreground" />
+            <span class="whitespace-nowrap text-sm font-medium">Export</span>
           </button>
         </div>
       </div>

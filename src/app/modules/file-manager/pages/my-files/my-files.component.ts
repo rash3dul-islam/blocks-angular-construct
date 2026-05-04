@@ -31,6 +31,11 @@ import {
   lucideChevronsRight,
   lucideArrowDownWideNarrow,
   lucideX,
+  lucideCopy,
+  lucideMove,
+  lucidePencil,
+  lucideDownload,
+  lucideUserPlus,
 } from '@ng-icons/lucide';
 import { HlmButton } from '@spartan-ng/helm/button';
 import { HlmInput } from '@spartan-ng/helm/input';
@@ -84,12 +89,78 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       lucideChevronsRight,
       lucideArrowDownWideNarrow,
       lucideX,
+      lucideCopy,
+      lucideMove,
+      lucidePencil,
+      lucideDownload,
+      lucideUserPlus,
     }),
   ],
   template: `
     <div class="p-6 flex flex-col gap-4 min-h-0 text-foreground">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-2xl font-bold tracking-tight">My files</h1>
+        <div class="flex flex-shrink-0 flex-wrap items-center gap-2">
+          <div class="flex rounded-lg border border-border bg-background overflow-hidden">
+            <button
+              hlmBtn
+              variant="ghost"
+              type="button"
+              class="h-9 w-9 rounded-none px-0"
+              [class.bg-muted]="viewMode() === 'list'"
+              (click)="viewMode.set('list')"
+              title="List view"
+            >
+              <ng-icon name="lucideAlignJustify" class="h-3.5 w-3.5" />
+            </button>
+            <button
+              hlmBtn
+              variant="ghost"
+              type="button"
+              class="h-9 w-9 rounded-none border-l border-border px-0"
+              [class.bg-muted]="viewMode() === 'grid'"
+              (click)="viewMode.set('grid')"
+              title="Grid view"
+            >
+              <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div class="relative">
+            <button
+              hlmBtn
+              type="button"
+              class="h-9 gap-1.5 bg-teal-600 text-white hover:bg-teal-700 text-sm font-medium"
+              (click)="$event.stopPropagation(); addMenuOpen.update((v) => !v)"
+            >
+              <ng-icon name="lucidePlusCircle" class="h-4 w-4" />
+              Add new
+            </button>
+            @if (addMenuOpen()) {
+              <div
+                class="absolute right-0 z-50 mt-1 min-w-[220px] rounded-lg border border-border bg-popover py-1 shadow-md"
+                (click)="$event.stopPropagation()"
+              >
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                  (click)="triggerUpload()"
+                >
+                  <ng-icon name="lucideUpload" class="h-4 w-4 shrink-0" />
+                  File/Folder upload
+                </button>
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                  (click)="$event.stopPropagation(); openCreateFolderModal()"
+                >
+                  <ng-icon name="lucideFolderPlus" class="h-4 w-4 shrink-0" />
+                  Create new folder
+                </button>
+              </div>
+            }
+          </div>
+        </div>
       </div>
 
       <!-- Toolbar (React BaseHeaderToolbar) -->
@@ -226,68 +297,6 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
               </div>
             }
           </div>
-
-          <div class="flex-1 min-w-[8px] lg:flex-none"></div>
-
-          <div class="flex rounded-lg border border-border bg-background overflow-hidden">
-            <button
-              hlmBtn
-              variant="ghost"
-              type="button"
-              class="h-9 w-9 rounded-none px-0"
-              [class.bg-muted]="viewMode() === 'list'"
-              (click)="viewMode.set('list')"
-              title="List view"
-            >
-              <ng-icon name="lucideAlignJustify" class="h-3.5 w-3.5" />
-            </button>
-            <button
-              hlmBtn
-              variant="ghost"
-              type="button"
-              class="h-9 w-9 rounded-none border-l border-border px-0"
-              [class.bg-muted]="viewMode() === 'grid'"
-              (click)="viewMode.set('grid')"
-              title="Grid view"
-            >
-              <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <div class="relative">
-            <button
-              hlmBtn
-              type="button"
-              class="h-9 gap-1.5 bg-teal-600 text-white hover:bg-teal-700 text-sm font-medium"
-              (click)="$event.stopPropagation(); addMenuOpen.update((v) => !v)"
-            >
-              <ng-icon name="lucidePlusCircle" class="h-4 w-4" />
-              Add new
-            </button>
-            @if (addMenuOpen()) {
-              <div
-                class="absolute right-0 z-50 mt-1 min-w-[220px] rounded-lg border border-border bg-popover py-1 shadow-md"
-                (click)="$event.stopPropagation()"
-              >
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                  (click)="triggerUpload()"
-                >
-                  <ng-icon name="lucideUpload" class="h-4 w-4 shrink-0" />
-                  File/Folder upload
-                </button>
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                  (click)="$event.stopPropagation(); openCreateFolderModal()"
-                >
-                  <ng-icon name="lucideFolderPlus" class="h-4 w-4 shrink-0" />
-                  Create new folder
-                </button>
-              </div>
-            }
-          </div>
         </div>
       </div>
 
@@ -305,24 +314,33 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- Upload modal (React: file upload modal) -->
       @if (uploadOpen()) {
+        <div class="fixed inset-0 z-40 bg-black/60" (click)="closeUploadModal()" aria-hidden="true"></div>
         <hlm-dialog state="open" (closed)="closeUploadModal()">
-          <hlm-dialog-content class="sm:max-w-lg" *brnDialogContent="let ctx">
+          <hlm-dialog-content
+            class="w-[min(92vw,680px)] border-border bg-background shadow-2xl p-6 sm:p-7"
+            *brnDialogContent="let ctx"
+          >
             <hlm-dialog-header>
-              <h2 class="text-lg font-semibold">Upload files</h2>
-              <p class="text-sm text-muted-foreground">Select one or more files to upload.</p>
+              <h2 class="text-[20px] font-semibold leading-none tracking-tight">Upload files</h2>
             </hlm-dialog-header>
 
-            <div class="mt-4 space-y-3">
-              <button hlmBtn variant="outline" type="button" class="w-full" (click)="pickFiles()">
-                Choose files
+            <div class="mt-5">
+              <button
+                type="button"
+                class="w-full rounded-md border border-dashed border-muted-foreground/35 bg-transparent px-5 py-12 text-center hover:bg-muted/10"
+                (click)="pickFiles()"
+              >
+                <div class="mx-auto mb-4 inline-flex h-11 w-11 items-center justify-center">
+                  <ng-icon name="lucideUpload" class="h-8 w-8 text-muted-foreground/75" />
+                </div>
+                <p class="text-[16px] font-medium leading-snug text-foreground">
+                  Drag & drop files here, or click to select files
+                </p>
+                <p class="mt-2 text-[13px] text-muted-foreground">PDF, DOCX, JPG, PNG | Max size: 25MB per file</p>
               </button>
 
-              @if (pendingUploads().length === 0) {
-                <div class="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-                  No files selected yet.
-                </div>
-              } @else {
-                <div class="rounded-md border border-border divide-y divide-border">
+              @if (pendingUploads().length > 0) {
+                <div class="mt-3 max-h-40 overflow-auto rounded-md border border-border divide-y divide-border">
                   @for (f of pendingUploads(); track f.name) {
                     <div class="flex items-center justify-between gap-3 p-3 text-sm">
                       <div class="min-w-0">
@@ -345,13 +363,20 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
               }
             </div>
 
-            <hlm-dialog-footer class="mt-6">
-              <button hlmBtn variant="outline" type="button" (click)="closeUploadModal()">
+            <hlm-dialog-footer class="mt-6 gap-3">
+              <button
+                hlmBtn
+                variant="outline"
+                type="button"
+                class="h-10 min-w-[88px] rounded-md px-4 text-sm font-medium"
+                (click)="closeUploadModal()"
+              >
                 Cancel
               </button>
               <button
                 hlmBtn
                 type="button"
+                class="h-10 min-w-[94px] rounded-md bg-teal-400 px-5 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                 [disabled]="pendingUploads().length === 0 || uploading()"
                 (click)="confirmUpload()"
               >
@@ -364,6 +389,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
 
       <!-- Rename modal (React: RenameFile) -->
       @if (renameOpen() && renamingItem(); as it) {
+        <div class="fixed inset-0 z-40 bg-black/60" (click)="closeRenameModal()" aria-hidden="true"></div>
         <hlm-dialog state="open" (closed)="closeRenameModal()">
           <hlm-dialog-content class="sm:max-w-md" *brnDialogContent="let ctx">
             <hlm-dialog-header>
@@ -495,22 +521,65 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
                       </button>
                       @if (rowMenuId() === item.fileId) {
                         <div
-                          class="absolute right-2 top-full z-20 mt-0.5 min-w-[140px] rounded-md border border-border bg-popover py-1 shadow-md text-left"
+                          class="absolute right-2 top-full z-20 mt-1 min-w-[180px] rounded-md border border-border bg-popover py-1 shadow-md text-left"
                           (click)="$event.stopPropagation()"
                         >
                           <button
                             type="button"
-                            class="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="shareItem(item)"
+                          >
+                            <ng-icon name="lucideUserPlus" class="h-4 w-4 text-muted-foreground" />
+                            Share
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="copyItem(item)"
+                          >
+                            <ng-icon name="lucideCopy" class="h-4 w-4 text-muted-foreground" />
+                            Copy
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="moveItem(item)"
+                          >
+                            <ng-icon name="lucideMove" class="h-4 w-4 text-muted-foreground" />
+                            Move
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
                             (click)="renameItem(item)"
                           >
+                            <ng-icon name="lucidePencil" class="h-4 w-4 text-muted-foreground" />
                             Rename
                           </button>
                           <button
                             type="button"
-                            class="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="openDetails(item)"
+                          >
+                            <ng-icon name="lucideInfo" class="h-4 w-4 text-muted-foreground" />
+                            View Details
+                          </button>
+                          <div class="my-1 border-t border-border"></div>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                            (click)="downloadItem(item)"
+                          >
+                            <ng-icon name="lucideDownload" class="h-4 w-4 text-muted-foreground" />
+                            Download
+                          </button>
+                          <button
+                            type="button"
+                            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
                             (click)="deleteItem(item)"
                           >
-                            Delete
+                            <ng-icon name="lucideTrash2" class="h-4 w-4" />
+                            Remove
                           </button>
                         </div>
                       }
@@ -528,7 +597,7 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
           </div>
 
           <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
+            class="flex flex-col items-end sm:flex-row sm:items-center sm:justify-end gap-3 px-4 py-3 border-t border-border bg-muted/20 text-xs text-muted-foreground"
           >
             <div class="flex items-center gap-2">
               <span>Rows per page</span>
@@ -594,30 +663,68 @@ import { FileItem, FileItemKind, FileViewMode } from '../../../../models/file-ma
       }
 
       @if (viewMode() === 'grid') {
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4">
-          @for (item of files(); track item.fileId) {
-            <button
-              type="button"
-              (dblclick)="openItem(item)"
-              class="group relative rounded-xl border border-border bg-card p-4 flex flex-col items-center gap-2 text-left hover:border-teal-500/50 hover:shadow-md transition-all"
-            >
-              <div
-                class="w-14 h-14 flex items-center justify-center rounded-lg"
-                [class]="iconBgFor(item)"
-              >
-                <ng-icon
-                  [name]="iconFor(item)"
-                  class="h-7 w-7"
-                  [class]="iconColorFor(item)"
-                ></ng-icon>
-              </div>
-              <span class="text-xs font-medium text-center truncate w-full">{{ item.name }}</span>
-              @if (item.isShared) {
-                <ng-icon name="lucideUsers" class="h-3 w-3 text-muted-foreground" />
+        <div class="space-y-6">
+          <section class="space-y-3">
+            <h3 class="text-sm font-medium text-foreground">Folder ({{ folderItems().length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              @for (item of folderItems(); track item.fileId) {
+                <button
+                  type="button"
+                  (dblclick)="openItem(item)"
+                  class="group relative h-14 rounded-lg border border-border bg-card px-4 flex items-center gap-3 text-left hover:border-teal-500/50 hover:shadow-sm transition-all"
+                >
+                  <div
+                    class="h-8 w-8 shrink-0 flex items-center justify-center rounded-md"
+                    [class]="iconBgFor(item)"
+                  >
+                    <ng-icon [name]="iconFor(item)" class="h-4 w-4" [class]="iconColorFor(item)"></ng-icon>
+                  </div>
+                  <span class="flex-1 min-w-0 truncate text-sm font-medium">{{ item.name }}</span>
+                  <span class="inline-flex h-7 w-7 items-center justify-center text-muted-foreground">
+                    <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                  </span>
+                </button>
+              } @empty {
+                <div
+                  class="col-span-full rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground"
+                >
+                  No folders available.
+                </div>
               }
-              <span class="text-xs text-muted-foreground">{{ displaySize(item) }}</span>
-            </button>
-          }
+            </div>
+          </section>
+
+          <section class="space-y-3">
+            <h3 class="text-sm font-medium text-foreground">File ({{ fileItems().length }})</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              @for (item of fileItems(); track item.fileId) {
+                <button
+                  type="button"
+                  (dblclick)="openItem(item)"
+                  class="group relative min-h-[120px] rounded-lg border border-border bg-card p-4 flex flex-col items-center justify-center gap-2 text-center hover:border-teal-500/50 hover:shadow-sm transition-all"
+                >
+                  <div
+                    class="h-14 w-14 shrink-0 flex items-center justify-center rounded-lg"
+                    [class]="iconBgFor(item)"
+                  >
+                    <ng-icon [name]="iconFor(item)" class="h-7 w-7" [class]="iconColorFor(item)"></ng-icon>
+                  </div>
+                  <span class="w-full truncate text-sm font-medium leading-tight">{{ item.name }}</span>
+                  <div class="absolute right-3 bottom-2 flex items-center">
+                    <span class="inline-flex h-7 w-7 items-center justify-center text-muted-foreground">
+                      <ng-icon name="lucideMoreVertical" class="h-4 w-4" />
+                    </span>
+                  </div>
+                </button>
+              } @empty {
+                <div
+                  class="col-span-full rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground"
+                >
+                  No files available.
+                </div>
+              }
+            </div>
+          </section>
         </div>
       }
 
@@ -771,6 +878,8 @@ export class MyFilesComponent {
   readonly totalPages = computed(() =>
     Math.max(1, Math.ceil(this.totalCount() / this.pageSize()) || 1)
   );
+  readonly folderItems = computed(() => this.files().filter((item) => item.itemKind === 'Folder'));
+  readonly fileItems = computed(() => this.files().filter((item) => item.itemKind !== 'Folder'));
 
   readonly typeFilterLabel = computed(() => {
     const v = this.itemKindFilter();
@@ -1055,6 +1164,24 @@ export class MyFilesComponent {
     this._fileService.deleteFile(item.fileId).subscribe(() => this.load());
   }
 
+  shareItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  copyItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  moveItem(_item: FileItem): void {
+    this.rowMenuId.set(null);
+  }
+
+  downloadItem(item: FileItem): void {
+    this.rowMenuId.set(null);
+    if (!item.downloadUrl) return;
+    window.open(item.downloadUrl, '_blank', 'noopener,noreferrer');
+  }
+
   openCreateFolderModal(): void {
     this.addMenuOpen.set(false);
     this.newFolderName.set('');
@@ -1078,7 +1205,6 @@ export class MyFilesComponent {
   triggerUpload(): void {
     this.addMenuOpen.set(false);
     this.openUploadModal();
-    this.pickFiles();
   }
 
   onFilesPicked(ev: Event): void {
