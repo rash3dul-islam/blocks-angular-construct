@@ -100,14 +100,16 @@ import { SIDEBAR_MENU, SidebarMenuItem } from '../../../constant/sidebar-menu.co
             <li *ngFor="let item of section.items">
               <ng-container *ngIf="item.children">
                 <button
-                  class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                         text-sidebar-foreground hover:bg-sidebar-accent
-                         hover:text-sidebar-accent-foreground transition-colors"
+                  type="button"
+                  class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-base font-sans
+                         text-[#0F0F0F] hover:bg-sidebar-accent hover:text-[#0F0F0F]
+                         dark:text-sidebar-foreground dark:hover:text-sidebar-accent-foreground
+                         transition-colors"
                   (click)="toggleExpanded(item.label)"
                 >
                   <ng-icon [name]="item.icon" class="w-4 h-4 shrink-0" />
                   <span
-                    class="flex-1 text-left whitespace-nowrap transition-opacity duration-200"
+                    class="flex-1 truncate text-left whitespace-nowrap transition-opacity duration-200"
                     [ngClass]="collapsed ? 'opacity-0 hidden' : 'opacity-100'"
                     >{{ item.label }}</span
                   >
@@ -130,13 +132,14 @@ import { SIDEBAR_MENU, SidebarMenuItem } from '../../../constant/sidebar-menu.co
                   <li *ngFor="let child of item.children">
                     <a
                       [routerLink]="child.route"
-                      routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      class="flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                             text-sidebar-foreground hover:bg-sidebar-accent
-                             hover:text-sidebar-accent-foreground transition-colors"
+                      routerLinkActive="bg-sidebar-accent text-[#0F0F0F] dark:text-sidebar-foreground font-semibold"
+                      class="flex items-center gap-3 px-3 py-2 rounded-md text-base font-sans
+                             text-[#0F0F0F] hover:bg-sidebar-accent hover:text-[#0F0F0F]
+                             dark:text-sidebar-foreground dark:hover:text-sidebar-accent-foreground
+                             transition-colors"
                     >
                       <ng-icon [name]="child.icon" class="w-4 h-4 shrink-0" />
-                      <span>{{ child.label }}</span>
+                      <span class="truncate">{{ child.label }}</span>
                     </a>
                   </li>
                 </ul>
@@ -145,14 +148,15 @@ import { SIDEBAR_MENU, SidebarMenuItem } from '../../../constant/sidebar-menu.co
               <ng-container *ngIf="!item.children">
                 <a
                   [routerLink]="item.route"
-                  routerLinkActive="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  class="flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                         text-sidebar-foreground hover:bg-sidebar-accent
-                         hover:text-sidebar-accent-foreground transition-colors group"
+                  routerLinkActive="bg-sidebar-accent text-[#0F0F0F] dark:text-sidebar-foreground font-semibold"
+                  class="flex items-center gap-3 px-3 py-2 rounded-md text-base font-sans
+                         text-[#0F0F0F] hover:bg-sidebar-accent hover:text-[#0F0F0F]
+                         dark:text-sidebar-foreground dark:hover:text-sidebar-accent-foreground
+                         transition-colors group"
                 >
                   <ng-icon [name]="item.icon" class="w-4 h-4 shrink-0" />
                   <span
-                    class="whitespace-nowrap transition-opacity duration-200"
+                    class="truncate whitespace-nowrap transition-opacity duration-200"
                     [ngClass]="collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'"
                     >{{ item.label }}</span
                   >
