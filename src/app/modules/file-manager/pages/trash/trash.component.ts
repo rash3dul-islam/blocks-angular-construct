@@ -1144,12 +1144,11 @@ export class TrashComponent implements OnInit {
   }
 
   clearTrash(): void {
-    const confirmed = confirm('Permanently delete all items in trash? This cannot be undone.');
-    if (!confirmed) return;
     const ids = this.files().map((f) => f.fileId);
     ids.forEach((id) => this.fileService.deleteFile(id).subscribe());
     this.files.set([]);
     this.openRowMenuId.set(null);
+    this.detailsItem.set(null);
     this.currentPage.set(1);
   }
 
