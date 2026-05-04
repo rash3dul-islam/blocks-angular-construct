@@ -108,7 +108,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               <ng-icon name="lucideLayoutGrid" class="h-3.5 w-3.5" />
             </button>
           </div>
-          @if (files().length > 0) {
+          
             <button
               type="button"
               class="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 dark:border-border dark:bg-card dark:text-foreground dark:hover:bg-muted/50"
@@ -122,7 +122,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
               />
               <span class="font-bold tracking-tight">Clear trash</span>
             </button>
-          }
+          
         </div>
       </div>
 
@@ -343,7 +343,7 @@ type TrashSortKey = 'name' | 'deleted' | 'type' | 'size';
 
       @if (filteredFiles().length === 0) {
         <div
-          class="flex flex-col items-center justify-center rounded-xl border border-border bg-card shadow-sm min-h-[320px] p-12 text-center"
+          class="flex flex-col items-center justify-center bg-transparent min-h-[320px] p-12 text-center mt-8 md:mt-45"
         >
           <div class="text-6xl mb-6">🗑️</div>
           <h3 class="text-xl font-medium text-foreground mb-2">Trash is empty</h3>
@@ -1144,12 +1144,11 @@ export class TrashComponent implements OnInit {
   }
 
   clearTrash(): void {
-    const confirmed = confirm('Permanently delete all items in trash? This cannot be undone.');
-    if (!confirmed) return;
     const ids = this.files().map((f) => f.fileId);
     ids.forEach((id) => this.fileService.deleteFile(id).subscribe());
     this.files.set([]);
     this.openRowMenuId.set(null);
+    this.detailsItem.set(null);
     this.currentPage.set(1);
   }
 
