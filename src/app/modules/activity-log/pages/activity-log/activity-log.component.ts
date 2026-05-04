@@ -171,7 +171,7 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
                     variant="ghost"
                     size="sm"
                     type="button"
-                    class="w-full justify-center text-center"
+                    class="w-full cursor-pointer justify-center text-center"
                     (click)="clearDateRange()"
                   >
                     Clear filter
