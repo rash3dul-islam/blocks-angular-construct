@@ -84,8 +84,8 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
 
       @if (passwordGrantAllowed()) {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex w-full flex-col gap-4">
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium text-foreground" for="email">Email</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-foreground" for="email">Email</label>
             <input
               id="email"
               type="email"
@@ -95,13 +95,13 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
               class="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
               [class.border-destructive]="emailInvalid"
             />
-            <p *ngIf="emailInvalid" class="text-xs text-destructive">
+            <p *ngIf="emailInvalid" class="mt-1 text-xs text-destructive">
               Please enter a valid email address.
             </p>
           </div>
 
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium text-foreground" for="password">Password</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-foreground" for="password">Password</label>
             <div class="relative">
               <input
                 id="password"
@@ -121,7 +121,7 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
                 <ng-icon [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'" class="h-4 w-4" />
               </button>
             </div>
-            <p *ngIf="passwordInvalid" class="text-xs text-destructive">Password is required.</p>
+            <p *ngIf="passwordInvalid" class="mt-1 text-xs text-destructive">Password is required.</p>
           </div>
 
           <div class="flex justify-end">
