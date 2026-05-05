@@ -1,44 +1,45 @@
 // ─── Email Sent Page (React: /sent-email) ─────────────────────────────────────
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink, ActivatedRoute } from '@angular/router';
-import { NgIf } from '@angular/common';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideSendHorizonal } from '@ng-icons/lucide';
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-email-sent',
   standalone: true,
-  imports: [RouterLink, NgIconComponent, NgIf],
-  viewProviders: [provideIcons({ lucideSendHorizonal })],
+  imports: [RouterLink],
   template: `
-    <div class="bg-card rounded-xl border border-border p-8 shadow-sm text-center">
-      <div
-        class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"
-      >
-        <ng-icon name="lucideSendHorizonal" class="w-7 h-7 text-primary" />
+    <div class="mx-auto flex w-full max-w-[460px] flex-col gap-8">
+      <img
+        src="/images/email_sent.svg"
+        alt="Email sent"
+        class="mx-auto h-[130px] w-[130px] object-contain"
+      />
+
+      <div class="text-left">
+        <h1 class="mb-4 text-2xl font-bold leading-8 text-[#0F0F0F] [font-family:'Nunito_Sans',sans-serif]">
+          Email sent
+        </h1>
+        <p class="text-base font-normal leading-6 text-[#4F4F4F] [font-family:'Nunito_Sans',sans-serif]">
+          An email has been sent to your registered email address.Please, follow the link on the
+          email to continue your sign up.
+        </p>
       </div>
-      <h1 class="text-2xl font-bold text-foreground">Email on its way!</h1>
-      <p class="text-muted-foreground text-sm mt-2">
-        <ng-container *ngIf="emailTo(); else genericCopy">
-          We sent a password reset link to <strong>{{ emailTo() }}</strong
-          >. Please check your inbox.
-        </ng-container>
-        <ng-template #genericCopy>
-          We sent a verification email. Please check your inbox and follow the instructions.
-        </ng-template>
-      </p>
-      <a routerLink="/login" class="inline-block mt-6 text-primary hover:underline text-sm">
-        Back to sign in
-      </a>
+
+      <button
+        type="button"
+        routerLink="/login"
+        class="h-12 w-full cursor-pointer rounded-md bg-[#018381] px-8 text-sm font-extrabold leading-5 text-white [font-family:'Nunito_Sans',sans-serif] transition-colors hover:bg-[#01706f]"
+      >
+        Go to log in
+      </button>
+
+      <button
+        type="button"
+        routerLink="/forgot-password"
+        class="-mt-2 h-11 w-full cursor-pointer rounded-md bg-[#F4F4F5] px-8 text-sm font-extrabold leading-5 text-[#18181B] [font-family:'Nunito_Sans',sans-serif] transition-colors hover:bg-[#e9e9eb]"
+      >
+        Change email address
+      </button>
     </div>
   `,
 })
-export class EmailSentComponent implements OnInit {
-  private readonly _route = inject(ActivatedRoute);
-  readonly emailTo = signal('');
-
-  ngOnInit(): void {
-    const e = this._route.snapshot.queryParamMap.get('email');
-    if (e) this.emailTo.set(e);
-  }
-}
+export class EmailSentComponent {}

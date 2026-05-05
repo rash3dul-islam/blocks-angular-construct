@@ -108,10 +108,12 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
               variant="outline"
               size="sm"
               type="button"
-              class="h-8 border-dashed w-full sm:w-auto justify-center"
+              class="h-8 max-w-full border-dashed w-full sm:w-auto justify-center gap-1"
             >
-              <ng-icon name="lucidePlusCircle" class="w-4 h-4 mr-1 shrink-0" />
-              Date
+              @if (!dateRangeSummary()) {
+                <ng-icon name="lucidePlusCircle" class="w-4 h-4 shrink-0" />
+              }
+              <span class="min-w-0 truncate">{{ dateRangeButtonLabel() }}</span>
             </button>
             <ng-template hlmPopoverPortal>
               <div hlmPopoverContent class="w-[min(100vw-2rem,320px)] p-0">
@@ -146,18 +148,41 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
                     }
                   </div>
 
-                  <div class="grid grid-cols-7 gap-1">
+                  <div class="grid grid-cols-7 gap-x-0 gap-y-1 pb-1">
                     @for (day of calendarDays(); track day.iso) {
                       <button
                         type="button"
-                        class="h-9 rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-                        [class.text-muted-foreground]="!day.isCurrentMonth"
-                        [class.font-medium]="day.isCurrentMonth"
-                        [class.bg-muted]="isDateSelected(day.iso)"
-                        [class.text-foreground]="isDateSelected(day.iso)"
-                        [ngClass]="{
-                          'bg-accent/70': isDateInSelectedRange(day.iso) && !isDateSelected(day.iso)
-                        }"
+                        class="relative flex h-9 min-w-0 items-center justify-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-teal-400"
+                        [class.w-full]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.w-9]="!calendarDayInRange(day.iso) || calendarDayIsEndpoint(day.iso)"
+                        [class.mx-auto]="!calendarDayInRange(day.iso) || calendarDayIsEndpoint(day.iso)"
+                        [class.rounded-md]="!calendarDayInRange(day.iso) || calendarDayIsEndpoint(day.iso)"
+                        [class.rounded-none]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.text-muted-foreground]="
+                          !day.isCurrentMonth && !calendarDayInRange(day.iso)
+                        "
+                        [class.text-foreground]="
+                          day.isCurrentMonth && (!calendarDayInRange(day.iso) || calendarDayIsEndpoint(day.iso))
+                        "
+                        [class.text-slate-900]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.dark:text-foreground]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.text-white]="calendarDayIsEndpoint(day.iso)"
+                        [class.font-semibold]="calendarDayIsEndpoint(day.iso)"
+                        [class.bg-slate-100]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.dark:bg-slate-800/50]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.bg-teal-600]="calendarDayIsEndpoint(day.iso)"
+                        [class.shadow-sm]="calendarDayIsEndpoint(day.iso)"
+                        [class.hover:bg-teal-700]="calendarDayIsEndpoint(day.iso)"
+                        [class.dark:bg-teal-600]="calendarDayIsEndpoint(day.iso)"
+                        [class.dark:hover:bg-teal-500]="calendarDayIsEndpoint(day.iso)"
+                        [class.hover:bg-slate-200]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.dark:hover:bg-slate-700/60]="calendarDayInRange(day.iso) && !calendarDayIsEndpoint(day.iso)"
+                        [class.hover:bg-muted/60]="
+                          day.isCurrentMonth && !calendarDayInRange(day.iso)
+                        "
+                        [class.dark:hover:bg-muted/60]="
+                          day.isCurrentMonth && !calendarDayInRange(day.iso)
+                        "
                         (click)="onCalendarDayClick(day.iso)"
                       >
                         {{ day.day }}
@@ -171,7 +196,7 @@ const transformCategory = (category: string) => category.toLowerCase().replace(/
                     variant="ghost"
                     size="sm"
                     type="button"
-                    class="w-full justify-center text-center"
+                    class="w-full cursor-pointer justify-center text-center"
                     (click)="clearDateRange()"
                   >
                     Clear filter
@@ -373,6 +398,34 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
     })
   );
 
+  /** When set, the Date trigger shows the range text and hides the leading + icon. */
+  readonly dateRangeSummary = computed(() => {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (!from || !to) return '';
+    const lo = from < to ? from : to;
+    const hi = from < to ? to : from;
+    const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    const a = new Date(lo + 'T12:00:00').toLocaleDateString('en-US', opts);
+    const b = new Date(hi + 'T12:00:00').toLocaleDateString('en-US', opts);
+    return `${a} – ${b}`;
+  });
+
+  readonly dateRangeButtonLabel = computed(() => {
+    const summary = this.dateRangeSummary();
+    if (summary) return summary;
+    const from = this.dateFrom();
+    if (from) {
+      const d = new Date(from + 'T12:00:00').toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      return `${d} – …`;
+    }
+    return 'Date';
+  });
+
   readonly calendarDays = computed(() => {
     const monthStart = this.currentMonth();
     const start = new Date(monthStart);
@@ -475,14 +528,21 @@ export class ActivityLogComponent implements OnInit, OnDestroy {
     this.setDateTo(isoDate);
   }
 
-  isDateSelected(isoDate: string): boolean {
-    return this.dateFrom() === isoDate || this.dateTo() === isoDate;
-  }
-
-  isDateInSelectedRange(isoDate: string): boolean {
+  /** Inclusive range for background bar; single start date counts until end is chosen. */
+  calendarDayInRange(iso: string): boolean {
     const from = this.dateFrom();
     const to = this.dateTo();
-    return Boolean(from && to && isoDate >= from && isoDate <= to);
+    if (!from) return false;
+    if (!to) return iso === from;
+    const lo = from < to ? from : to;
+    const hi = from < to ? to : from;
+    return iso >= lo && iso <= hi;
+  }
+
+  calendarDayIsEndpoint(iso: string): boolean {
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    return (!!from && iso === from) || (!!to && iso === to);
   }
 
   isModuleSelected(id: string): boolean {

@@ -1,12 +1,12 @@
 // ─── Login Page ────────────────────────────────────────────────────────────────
 // Mirrors: react_Constract Signin + SigninEmail + SsoSignin (grant types from GetLoginOptions)
 
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideEye, lucideEyeOff, lucideLoader } from '@ng-icons/lucide';
+import { lucideEye, lucideEyeOff, lucideLoader, lucideTriangleAlert } from '@ng-icons/lucide';
 import { AuthService } from '../../services/auth.service';
 import { AuthLoginOptionsService } from '../../services/auth-login-options.service';
 import { SsoService } from '../../services/sso.service';
@@ -20,12 +20,13 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
   'stg-construct.seliseblocks.com',
   'dev-construct.seliseblocks.com',
 ];
+const ERROR_AUTO_DISMISS_MS = 4000;
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, NgIf, NgIconComponent],
-  viewProviders: [provideIcons({ lucideEye, lucideEyeOff, lucideLoader })],
+  viewProviders: [provideIcons({ lucideEye, lucideEyeOff, lucideLoader, lucideTriangleAlert })],
   template: `
     <div class="flex w-full flex-col gap-6">
       <div class="mb-2 h-14 w-32 shrink-0">
@@ -71,9 +72,19 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
 
       <div
         *ngIf="errorMessage()"
-        class="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
+        class="w-full rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive"
       >
-        {{ errorMessage() }}
+        @if (isInvalidCredentialsError()) {
+          <div class="flex items-start gap-2">
+            <ng-icon name="lucideTriangleAlert" class="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              <p class="text-sm font-medium leading-5">{{ invalidCredentialsTitle() }}</p>
+              <p class="mt-1 text-sm leading-5">{{ invalidCredentialsDescription() }}</p>
+            </div>
+          </div>
+        } @else {
+          <p class="text-sm">{{ errorMessage() }}</p>
+        }
       </div>
 
       @if (!passwordGrantAllowed() && !socialGrantAllowed()) {
@@ -84,8 +95,8 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
 
       @if (passwordGrantAllowed()) {
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex w-full flex-col gap-4">
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium text-foreground" for="email">Email</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-foreground" for="email">Email</label>
             <input
               id="email"
               type="email"
@@ -95,13 +106,10 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
               class="h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
               [class.border-destructive]="emailInvalid"
             />
-            <p *ngIf="emailInvalid" class="text-xs text-destructive">
-              Please enter a valid email address.
-            </p>
           </div>
 
-          <div class="space-y-1.5">
-            <label class="text-sm font-medium text-foreground" for="password">Password</label>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-foreground" for="password">Password</label>
             <div class="relative">
               <input
                 id="password"
@@ -121,7 +129,7 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
                 <ng-icon [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'" class="h-4 w-4" />
               </button>
             </div>
-            <p *ngIf="passwordInvalid" class="text-xs text-destructive">Password is required.</p>
+            <p *ngIf="passwordInvalid" class="mt-1 text-xs text-destructive">Password is required.</p>
           </div>
 
           <div class="flex justify-end">
@@ -184,7 +192,7 @@ const DEMO_BANNER_HOSTS: readonly string[] = [
     </div>
   `,
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   private readonly _fb = inject(FormBuilder);
   private readonly _authService = inject(AuthService);
   private readonly _loginOptions = inject(AuthLoginOptionsService);
@@ -229,6 +237,34 @@ export class LoginComponent implements OnInit {
     return !!(s.isEmailPasswordSignUpEnabled || s.isSSoSignUpEnabled);
   });
 
+  readonly isInvalidCredentialsError = computed(() => {
+    const msg = this.errorMessage().toLowerCase();
+    return (
+      msg.includes('invalid credentials') ||
+      msg.includes('invalid email or password') ||
+      msg.includes('user name or password invalid') ||
+      msg.includes('invalid username or password')
+    );
+  });
+
+  readonly invalidCredentialsTitle = computed(() => {
+    const [rawTitle] = this.errorMessage().split('\n');
+    const title = rawTitle?.trim().toLowerCase() ?? '';
+    if (
+      title.includes('user name or password invalid') ||
+      title.includes('invalid username or password')
+    ) {
+      return 'Invalid credentials';
+    }
+    return rawTitle?.trim() || 'Invalid credentials';
+  });
+
+  readonly invalidCredentialsDescription = computed(() => {
+    const [, description] = this.errorMessage().split('\n');
+    return description?.trim() || 'Your email or password is not valid.';
+  });
+  private errorDismissTimeoutId: number | null = null;
+
   get emailInvalid(): boolean {
     const ctrl = this.loginForm.get('email');
     return !!(ctrl?.invalid && ctrl?.touched);
@@ -246,6 +282,10 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.clearErrorDismissTimer();
+  }
+
   formatProviderLabel(provider: string): string {
     if (!provider) return 'SSO';
     return provider.charAt(0).toUpperCase() + provider.slice(1).toLowerCase();
@@ -257,10 +297,10 @@ export class LoginComponent implements OnInit {
 
   onSsoClick(provider: string, audience: string): void {
     if (!provider || !audience) {
-      this.errorMessage.set('SSO provider configuration is incomplete.');
+      this.setErrorMessage('SSO provider configuration is incomplete.');
       return;
     }
-    this.errorMessage.set('');
+    this.setErrorMessage('');
     this.ssoBusy.set(true);
     this._sso
       .getSocialLoginEndpoint({
@@ -272,11 +312,11 @@ export class LoginComponent implements OnInit {
         next: (res) => {
           this.ssoBusy.set(false);
           if (res.error) {
-            this.errorMessage.set(String(res.error));
+            this.setErrorMessage(String(res.error));
             return;
           }
           if (res.requiresMfa && res.mfaToken != null) {
-            this.errorMessage.set(
+            this.setErrorMessage(
               'Additional sign-in verification is required. Add an Angular route for MFA (React uses /verify-mfa) to complete this flow.'
             );
             return;
@@ -287,7 +327,7 @@ export class LoginComponent implements OnInit {
         },
         error: () => {
           this.ssoBusy.set(false);
-          this.errorMessage.set('Could not start social sign-in.');
+          this.setErrorMessage('Could not start social sign-in.');
         },
       });
   }
@@ -299,7 +339,7 @@ export class LoginComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.errorMessage.set('');
+    this.setErrorMessage('');
 
     const { email, password } = this.loginForm.value;
 
@@ -316,9 +356,26 @@ export class LoginComponent implements OnInit {
           err?.error?.message ??
           err?.message ??
           'Invalid email or password.';
-        this.errorMessage.set(msg);
+        this.setErrorMessage(msg);
         this.isLoading.set(false);
       },
     });
+  }
+
+  private setErrorMessage(message: string): void {
+    this.errorMessage.set(message);
+    this.clearErrorDismissTimer();
+    if (!message) return;
+
+    this.errorDismissTimeoutId = window.setTimeout(() => {
+      this.errorMessage.set('');
+      this.errorDismissTimeoutId = null;
+    }, ERROR_AUTO_DISMISS_MS);
+  }
+
+  private clearErrorDismissTimer(): void {
+    if (this.errorDismissTimeoutId === null) return;
+    window.clearTimeout(this.errorDismissTimeoutId);
+    this.errorDismissTimeoutId = null;
   }
 }

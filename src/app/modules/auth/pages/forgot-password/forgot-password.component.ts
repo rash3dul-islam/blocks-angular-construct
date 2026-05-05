@@ -6,7 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideLoader, lucideArrowLeft } from '@ng-icons/lucide';
+import { lucideLoader } from '@ng-icons/lucide';
 import { AuthService } from '../../services/auth.service';
 import { idpErrorMessage } from '../../utils/idp-error.util';
 import { strictEmailValidator } from '../../validators/strict-email.validator';
@@ -15,20 +15,27 @@ import { strictEmailValidator } from '../../validators/strict-email.validator';
   selector: 'app-forgot-password',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, NgIf, NgIconComponent],
-  viewProviders: [provideIcons({ lucideLoader, lucideArrowLeft })],
+  viewProviders: [provideIcons({ lucideLoader })],
   template: `
     <div class="flex w-full flex-col gap-6">
-      <a
-        routerLink="/login"
-        class="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ng-icon name="lucideArrowLeft" class="w-4 h-4" /> Back to sign in
-      </a>
+      <div class="mb-2 h-14 w-32 shrink-0">
+        <img
+          src="/images/construct_logo_dark.svg"
+          alt="BLOCKS construct"
+          class="block h-full w-full object-contain object-left dark:hidden"
+        />
+        <img
+          src="/images/construct_logo_light.svg"
+          alt="BLOCKS construct"
+          class="hidden h-full w-full object-contain object-left dark:block"
+        />
+      </div>
 
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">Forgot password?</h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">Forgot Your Password?</h1>
         <p class="mt-1 text-sm text-muted-foreground">
-          Enter your email and we&apos;ll send you a reset link
+          Enter your registered email address, and we&apos;ll send you instructions to reset your
+          password.
         </p>
       </div>
 
@@ -63,6 +70,14 @@ import { strictEmailValidator } from '../../validators/strict-email.validator';
           {{ isLoading() ? 'Sending...' : 'Send reset link' }}
         </button>
       </form>
+
+      <button
+        type="button"
+        routerLink="/login"
+        class="h-11 w-full rounded-md bg-transparent text-base font-semibold text-primary transition-colors hover:bg-muted"
+      >
+        Go to log in
+      </button>
     </div>
   `,
 })
